@@ -23,13 +23,13 @@ the **same verdict for every case**.
 
 | Tier | Target | Cases |
 |---|---|---|
-| DB | mini-cex SQLite, opened directly (balances, ledger, order book, stakes) | 23 |
-| API | mini-cex REST: accounts, transfer, swap, bridge, order book + fees, API keys, staking | 49 |
+| DB | mini-cex SQLite, opened directly (balances, ledger, order book, stakes, bot quotes) | 28 |
+| API | mini-cex REST: accounts, transfer, swap, bridge, order book + fees, API keys, staking, market-maker | 55 |
 | API | Kraken public API (read-only) | 6 |
-| BOT | the pure risk gate | 10 |
+| BOT | the pure risk gate (transfer/swap/bridge/order) | 13 |
 | FE | mini-cex screens + interactive forms (Playwright) | 10 |
-| | **Total** | **98** |
+| | **Total** | **112** |
 
 Modules: `01` DB · `02` mini-cex API · `03` Kraken · `04` risk gate · `05` FE ·
 `06` spot order book + maker-taker fees · `07` scoped API keys + rate limits ·
-`08` staking / earn.
+`08` staking / earn · `09` market-maker bot (API) · `10` market-maker bot (DB).

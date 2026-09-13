@@ -20,6 +20,7 @@ REASONS = {
     "SLIPPAGE": "quote is below the slippage floor",
     "UNKNOWN_CHAIN": "destination chain is not supported",
     "OVER_CAP": "amount exceeds the bridge per-transaction cap",
+    "MAX_ORDER_SIZE": "order size exceeds the max",
     "UNKNOWN_OP": "unknown operation kind",
 }
 
@@ -55,6 +56,7 @@ class RiskEngine:
         self.cfg = {
             "chains": ["ethereum", "arbitrum", "solana", "bitcoin"],
             "bridge_cap_usd_micro": 100_000 * 1_000_000,
+            "max_order_size": 100 * 100_000_000,   # 100 whole coins, base units
             "kill_switch": False,
             **cfg,
         }
@@ -62,14 +64,28 @@ class RiskEngine:
     def plan(self, op, ctx):
         if self.cfg["kill_switch"]:
             return _no(REASONS["KILL_SWITCH"])
-        amount = op.get("amount")
-        if not isinstance(amount, int) or amount <= 0:
-            return _no(REASONS["ZERO_AMOUNT"])
 
         def bal(asset):
             return (ctx.get("balances") or {}).get(asset, 0)
 
         kind = op.get("kind")
+        if kind == "order":
+            size = op.get("size")
+            if not isinstance(size, int) or size <= 0:
+                return _no(REASONS["ZERO_AMOUNT"])
+            if op["base"] not in ctx["assets"] or op["quote"] not in ctx["assets"]:
+                return _no(REASONS["UNKNOWN_ASSET"])
+            if size > self.cfg["max_order_size"]:
+                return _no(REASONS["MAX_ORDER_SIZE"])
+            need_asset = op["quote"] if op["side"] == "buy" else op["base"]
+            need = (size * op["price"]) // SCALE if op["side"] == "buy" else size
+            if bal(need_asset) < need:
+                return _no(REASONS["INSUFFICIENT_FUNDS"])
+            return _ok()
+
+        amount = op.get("amount")
+        if not isinstance(amount, int) or amount <= 0:
+            return _no(REASONS["ZERO_AMOUNT"])
         if kind == "transfer":
             if op["asset"] not in ctx["assets"]:
                 return _no(REASONS["UNKNOWN_ASSET"])

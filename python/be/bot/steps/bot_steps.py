@@ -62,6 +62,11 @@ def plan_bridge(qa, amt, asset, chain):
     qa.decision = qa.engine.plan({"kind": "bridge", "asset": asset, "amount": coin(amt), "dst_chain": chain}, qa.ctx)
 
 
+@when(parsers.parse("the engine plans an order to {side} {size:g} {base} at {price:g} {quote}"))
+def plan_order(qa, side, size, base, price, quote):
+    qa.decision = qa.engine.plan({"kind": "order", "side": side, "base": base, "quote": quote, "size": coin(size), "price": coin(price)}, qa.ctx)
+
+
 @then("the plan is allowed")
 def plan_allowed(qa):
     qa.check("plan allowed", qa.decision and qa.decision["ok"] is True, str(qa.decision))

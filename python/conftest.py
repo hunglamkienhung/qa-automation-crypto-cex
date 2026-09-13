@@ -16,6 +16,7 @@ pytest_plugins = [
     "be.api.steps.orders_steps",
     "be.api.steps.apikeys_steps",
     "be.api.steps.earn_steps",
+    "be.bot.steps.mm_steps",
 ]
 
 

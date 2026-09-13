@@ -61,3 +61,19 @@ Feature: The pure risk gate
   Scenario: A bridge within cap and balance is allowed
     When the engine plans a bridge of 0.5 BTC to chain "ethereum"
     Then the plan is allowed
+
+  @case:99 @priority:high
+  Scenario: A zero-size order is refused
+    When the engine plans an order to sell 0.0 BTC at 60000 USD
+    Then the plan is refused for "amount must be positive"
+
+  @case:100 @priority:high
+  Scenario: An order above the max size is refused
+    When the engine plans an order to sell 200.0 BTC at 60000 USD
+    Then the plan is refused for "order size exceeds the max"
+
+  @case:101 @priority:high
+  Scenario: The kill switch blocks an order too
+    Given the kill switch is on
+    When the engine plans an order to sell 0.1 BTC at 60000 USD
+    Then the plan is refused for "the kill switch is on"

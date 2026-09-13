@@ -23,6 +23,7 @@ const REASONS = {
   SLIPPAGE: 'quote is below the slippage floor',
   UNKNOWN_CHAIN: 'destination chain is not supported',
   OVER_CAP: 'amount exceeds the bridge per-transaction cap',
+  MAX_ORDER_SIZE: 'order size exceeds the max',
   UNKNOWN_OP: 'unknown operation kind',
 };
 
@@ -51,6 +52,7 @@ class RiskEngine {
     this.cfg = {
       chains: ['ethereum', 'arbitrum', 'solana', 'bitcoin'],
       bridgeCapUsdMicro: 100000n * 1000000n,
+      maxOrderSize: 100 * 1e8,   // 100 whole coins, base units
       killSwitch: false,
       ...cfg,
     };
@@ -58,8 +60,20 @@ class RiskEngine {
 
   plan(op, ctx) {
     if (this.cfg.killSwitch) return no(REASONS.KILL_SWITCH);
-    if (!Number.isInteger(op.amount) || op.amount <= 0) return no(REASONS.ZERO_AMOUNT);
     const bal = (asset) => (ctx.balances && ctx.balances[asset]) || 0;
+
+    // An order the market-maker wants to rest: gate size and the reserve it needs.
+    if (op.kind === 'order') {
+      if (!Number.isInteger(op.size) || op.size <= 0) return no(REASONS.ZERO_AMOUNT);
+      if (!ctx.assets[op.base] || !ctx.assets[op.quote]) return no(REASONS.UNKNOWN_ASSET);
+      if (op.size > this.cfg.maxOrderSize) return no(REASONS.MAX_ORDER_SIZE);
+      const needAsset = op.side === 'buy' ? op.quote : op.base;
+      const need = op.side === 'buy' ? Number((BigInt(op.size) * BigInt(op.price)) / SCALE) : op.size;
+      if (bal(needAsset) < need) return no(REASONS.INSUFFICIENT_FUNDS);
+      return ok();
+    }
+
+    if (!Number.isInteger(op.amount) || op.amount <= 0) return no(REASONS.ZERO_AMOUNT);
 
     if (op.kind === 'transfer') {
       if (!ctx.assets[op.asset]) return no(REASONS.UNKNOWN_ASSET);

@@ -1,8 +1,8 @@
 # Crypto CEX — test cases
 
-98 cases across a self-written mini-cex (with a real SQLite database) and the live Kraken public API. Generated from `../features/*.feature` by `build.js`; do not edit by hand.
+112 cases across a self-written mini-cex (with a real SQLite database) and the live Kraken public API. Generated from `../features/*.feature` by `build.js`; do not edit by hand.
 
-## minicex-db (23)
+## minicex-db (28)
 
 | ID | Layer | Priority | Title |
 |---|---|---|---|
@@ -29,8 +29,13 @@
 | 89 | BE/DB | High | A stake principal must be positive |
 | 91 | BE/DB | High | The locked principal leaves a matching ledger line |
 | 97 | BE/DB | High | A redeemed stake's ledger balances back to whole |
+| 108 | BE/DB | High | A quote writes one open bid and one open ask |
+| 109 | BE/DB | High | The bid reserves quote and the ask reserves base |
+| 110 | BE/DB | High | A lifted ask writes a fill and advances the order |
+| 111 | BE/DB | High | Repricing cancels the old orders and releases their reserve |
+| 112 | BE/DB | High | The maker's ledger balances after quote, fill and reprice |
 
-## minicex-api (49)
+## minicex-api (55)
 
 | ID | Layer | Priority | Title |
 |---|---|---|---|
@@ -83,6 +88,12 @@
 | 95 | BE/API | High | A stake cannot be redeemed twice |
 | 96 | BE/API | High | Staking more than the balance is refused |
 | 98 | BE/API | Medium | Staked funds are not available to withdraw |
+| 102 | BE/API | High | The market maker posts a two-sided quote |
+| 103 | BE/API | High | The quotes rest on the book without crossing |
+| 104 | BE/API | High | Repricing replaces the quotes |
+| 105 | BE/API | High | When a taker lifts the ask, the maker's ask fills |
+| 106 | BE/API | High | The kill switch stops the maker from quoting |
+| 107 | BE/API | High | Dry-run plans a quote without sending it |
 
 ## kraken-api (6)
 
@@ -95,7 +106,7 @@
 | 37 | BE/API | High | The mini-cex BTC price is the same order of magnitude as Kraken's |
 | 38 | BE/API | Medium | Kraken quotes a positive ETH price |
 
-## bot (10)
+## bot (13)
 
 | ID | Layer | Priority | Title |
 |---|---|---|---|
@@ -109,6 +120,9 @@
 | 46 | BE/BOT | High | A bridge to an unknown chain is refused |
 | 47 | BE/BOT | High | A bridge over the cap is refused |
 | 48 | BE/BOT | High | A bridge within cap and balance is allowed |
+| 99 | BE/BOT | High | A zero-size order is refused |
+| 100 | BE/BOT | High | An order above the max size is refused |
+| 101 | BE/BOT | High | The kill switch blocks an order too |
 
 ## minicex-fe (10)
 

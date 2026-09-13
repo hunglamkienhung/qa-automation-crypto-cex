@@ -9,7 +9,7 @@
       "minicex-fe": "mini-cex HTML pages (Playwright)"
     },
     "idPolicy": "immutable",
-    "nextId": 99,
+    "nextId": 113,
     "note": "Generated from features/*.feature by testcases/build.js. Every scenario carries @case:N; an N missing here is an error."
   },
   "cases": {
@@ -1277,6 +1277,187 @@
         "When \"alice\" tries to withdraw 0.5 BTC",
         "Then the response status is 409",
         "And the response code is \"insufficient_funds\""
+      ]
+    },
+    "99": {
+      "module": "04-bot",
+      "layer": "BE/BOT",
+      "tier": "bot",
+      "title": "A zero-size order is refused",
+      "priority": "High",
+      "steps": [
+        "When the engine plans an order to sell 0.0 BTC at 60000 USD",
+        "Then the plan is refused for \"amount must be positive\""
+      ]
+    },
+    "100": {
+      "module": "04-bot",
+      "layer": "BE/BOT",
+      "tier": "bot",
+      "title": "An order above the max size is refused",
+      "priority": "High",
+      "steps": [
+        "When the engine plans an order to sell 200.0 BTC at 60000 USD",
+        "Then the plan is refused for \"order size exceeds the max\""
+      ]
+    },
+    "101": {
+      "module": "04-bot",
+      "layer": "BE/BOT",
+      "tier": "bot",
+      "title": "The kill switch blocks an order too",
+      "priority": "High",
+      "steps": [
+        "Given the kill switch is on",
+        "When the engine plans an order to sell 0.1 BTC at 60000 USD",
+        "Then the plan is refused for \"the kill switch is on\""
+      ]
+    },
+    "102": {
+      "module": "09-cex-mm-bot",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "The market maker posts a two-sided quote",
+      "priority": "High",
+      "steps": [
+        "Given a funded market maker on BTC/USD at reference 60000 with 50 bps spread",
+        "When the market maker quotes",
+        "Then the quote is placed",
+        "And the bid is below the reference and the ask is above it"
+      ]
+    },
+    "103": {
+      "module": "09-cex-mm-bot",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "The quotes rest on the book without crossing",
+      "priority": "High",
+      "steps": [
+        "Given a funded market maker on BTC/USD at reference 60000 with 50 bps spread",
+        "When the market maker quotes",
+        "Then the order book shows the maker's bid and ask",
+        "And the maker has exactly one bid and one ask resting"
+      ]
+    },
+    "104": {
+      "module": "09-cex-mm-bot",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "Repricing replaces the quotes",
+      "priority": "High",
+      "steps": [
+        "Given a funded market maker on BTC/USD at reference 60000 with 50 bps spread",
+        "And the market maker quotes",
+        "When the market maker reprices to 61000",
+        "Then the maker has exactly one bid and one ask resting",
+        "And the resting ask is at the new ask price"
+      ]
+    },
+    "105": {
+      "module": "09-cex-mm-bot",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "When a taker lifts the ask, the maker's ask fills",
+      "priority": "High",
+      "steps": [
+        "Given a funded market maker on BTC/USD at reference 60000 with 50 bps spread",
+        "And the market maker quotes",
+        "When a taker lifts the maker's ask",
+        "Then the maker's ask order is filled"
+      ]
+    },
+    "106": {
+      "module": "09-cex-mm-bot",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "The kill switch stops the maker from quoting",
+      "priority": "High",
+      "steps": [
+        "Given a funded market maker on BTC/USD at reference 60000 with 50 bps spread with the kill switch on",
+        "When the market maker quotes",
+        "Then the quote is refused for \"kill switch\"",
+        "And the maker has no resting quotes"
+      ]
+    },
+    "107": {
+      "module": "09-cex-mm-bot",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "Dry-run plans a quote without sending it",
+      "priority": "High",
+      "steps": [
+        "Given a funded market maker on BTC/USD at reference 60000 with 50 bps spread in dry-run mode",
+        "When the market maker quotes",
+        "Then the quote is a dry run",
+        "And the maker has no resting quotes",
+        "And the maker's token does not leak into a log line"
+      ]
+    },
+    "108": {
+      "module": "10-cex-mm-bot-db",
+      "layer": "BE/DB",
+      "tier": "minicex-db",
+      "title": "A quote writes one open bid and one open ask",
+      "priority": "High",
+      "steps": [
+        "Given a funded market maker on BTC/USD at reference 60000 with 50 bps spread",
+        "When the market maker quotes",
+        "Then the store has one open bid and one open ask for the maker"
+      ]
+    },
+    "109": {
+      "module": "10-cex-mm-bot-db",
+      "layer": "BE/DB",
+      "tier": "minicex-db",
+      "title": "The bid reserves quote and the ask reserves base",
+      "priority": "High",
+      "steps": [
+        "Given a funded market maker on BTC/USD at reference 60000 with 50 bps spread",
+        "When the market maker quotes",
+        "Then the maker's reserved BTC covers the ask and reserved USD covers the bid"
+      ]
+    },
+    "110": {
+      "module": "10-cex-mm-bot-db",
+      "layer": "BE/DB",
+      "tier": "minicex-db",
+      "title": "A lifted ask writes a fill and advances the order",
+      "priority": "High",
+      "steps": [
+        "Given a funded market maker on BTC/USD at reference 60000 with 50 bps spread",
+        "And the market maker quotes",
+        "When a taker lifts the maker's ask",
+        "Then a fill row records the ask size at the ask price",
+        "And the maker's ask order filled equals its size in the store"
+      ]
+    },
+    "111": {
+      "module": "10-cex-mm-bot-db",
+      "layer": "BE/DB",
+      "tier": "minicex-db",
+      "title": "Repricing cancels the old orders and releases their reserve",
+      "priority": "High",
+      "steps": [
+        "Given a funded market maker on BTC/USD at reference 60000 with 50 bps spread",
+        "And the market maker quotes",
+        "When the market maker reprices to 61000",
+        "Then the maker has exactly two cancelled orders in the store",
+        "And the maker's reserved funds cover only the new quote"
+      ]
+    },
+    "112": {
+      "module": "10-cex-mm-bot-db",
+      "layer": "BE/DB",
+      "tier": "minicex-db",
+      "title": "The maker's ledger balances after quote, fill and reprice",
+      "priority": "High",
+      "steps": [
+        "Given a funded market maker on BTC/USD at reference 60000 with 50 bps spread",
+        "And the market maker quotes",
+        "And a taker lifts the maker's ask",
+        "And the market maker reprices to 61000",
+        "Then the ledger sum for the maker in BTC equals its balance row",
+        "And the ledger sum for the maker in USD equals its balance row"
       ]
     }
   }

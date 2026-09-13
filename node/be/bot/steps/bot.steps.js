@@ -48,6 +48,9 @@ When('the engine plans a swap of {float} {word} to {word} demanding at least {fl
 When('the engine plans a bridge of {float} {word} to chain {string}', function (amt, asset, chain) {
   this.decision = this.engine.plan({ kind: 'bridge', asset, amount: coin(amt), dstChain: chain }, this.ctx);
 });
+When('the engine plans an order to {word} {float} {word} at {float} {word}', function (side, size, base, price, quote) {
+  this.decision = this.engine.plan({ kind: 'order', side, base, quote, size: coin(size), price: coin(price) }, this.ctx);
+});
 
 Then('the plan is allowed', function () {
   this.check('plan allowed', this.decision && this.decision.ok === true, this.decision ? JSON.stringify(this.decision) : 'no decision');

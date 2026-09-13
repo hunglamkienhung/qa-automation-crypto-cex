@@ -53,7 +53,13 @@ Nothing here needs an account, a key, or a paid service. Clone it and it runs.
 Amounts are integer base units (1e8 per coin) and prices are USD-micros, so
 every figure is exact — no floats in the money path. The live Kraken tier
 cross-checks the mini-cex's listed assets and prices against a real venue.
-**98 cases** across both stacks.
+- **market-maker bot** — a client that quotes a post-only bid+ask around a
+  reference, cancels/replaces on a reprice, passes every order through the pure
+  risk gate, fills when a taker lifts a quote, retries only transport failures
+  (never a valid rejection), and never leaks its token. Verified at both the API
+  tier and, from the SQLite rows, the DB tier.
+
+**112 cases** across both stacks.
 
 ## The two ideas worth a minute
 
