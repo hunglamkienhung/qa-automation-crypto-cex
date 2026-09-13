@@ -55,3 +55,26 @@ class WalletPage:
             el = self.page.query_selector(sel)
             return el.text_content().strip() if el else None
         return {"idText": read("h1.op-id"), "directionText": read(".direction"), "statusText": read(".status"), "amountText": read(".amount")}
+
+    def open_form(self, action):
+        self.open("/forms/" + action)
+        try:
+            self.page.wait_for_selector("#form", timeout=15000)
+        except Exception as err:  # noqa: BLE001
+            raise ScreenNotReady(action + " form never rendered") from err
+
+    def submit_form(self, values):
+        for fid, val in values.items():
+            self.page.fill("#" + fid, str(val))
+        self.page.click("#go")
+        try:
+            self.page.wait_for_selector("#result[data-status]", timeout=15000)
+        except Exception as err:  # noqa: BLE001
+            raise ScreenNotReady("form result never appeared") from err
+
+    def form_result(self):
+        return {
+            "status": int(self.page.get_attribute("#result", "data-status")),
+            "code": self.page.get_attribute("#result", "data-code"),
+            "text": self.page.text_content("#result") or "",
+        }

@@ -9,7 +9,7 @@
       "minicex-fe": "mini-cex HTML pages (Playwright)"
     },
     "idPolicy": "immutable",
-    "nextId": 55,
+    "nextId": 59,
     "note": "Generated from features/*.feature by testcases/build.js. Every scenario carries @case:N; an N missing here is an error."
   },
   "cases": {
@@ -474,7 +474,7 @@
       "title": "Kraken quotes a positive BTC price",
       "priority": "High",
       "steps": [
-        "When the Kraken last price for \"XBT/USD\" is read",
+        "When the Kraken last price for \"XBTUSD\" is read",
         "Then the Kraken price is a positive number"
       ]
     },
@@ -485,7 +485,7 @@
       "title": "The mini-cex BTC price is the same order of magnitude as Kraken's",
       "priority": "High",
       "steps": [
-        "When the Kraken last price for \"XBT/USD\" is read",
+        "When the Kraken last price for \"XBTUSD\" is read",
         "Then the mini-cex BTC price is the same order of magnitude as Kraken's"
       ]
     },
@@ -496,7 +496,7 @@
       "title": "Kraken quotes a positive ETH price",
       "priority": "Medium",
       "steps": [
-        "When the Kraken last price for \"ETH/USD\" is read",
+        "When the Kraken last price for \"ETHUSD\" is read",
         "Then the Kraken price is a positive number"
       ]
     },
@@ -679,6 +679,60 @@
         "And \"alice\" bridge-withdraws 0.2 BTC to chain \"ethereum\"",
         "When the op page for that bridge op is opened",
         "Then the op status on screen is \"locked\""
+      ]
+    },
+    "55": {
+      "module": "05-cex-fe",
+      "layer": "FE/UI",
+      "tier": "minicex-fe",
+      "title": "The transfer form moves funds between accounts",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\" funded with 1.0 BTC",
+        "And a fresh account \"bob\"",
+        "When the transfer form is submitted moving 0.4 BTC from \"alice\" to \"bob\"",
+        "Then the form result status is 201",
+        "And the API balance for \"bob\" in BTC is 0.4 BTC"
+      ]
+    },
+    "56": {
+      "module": "05-cex-fe",
+      "layer": "FE/UI",
+      "tier": "minicex-fe",
+      "title": "The swap form converts one asset to another",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\" funded with 1.0 BTC",
+        "When the swap form is submitted converting 0.5 BTC to USD for \"alice\"",
+        "Then the form result status is 201",
+        "And the API balance for \"alice\" in USD is above zero"
+      ]
+    },
+    "57": {
+      "module": "05-cex-fe",
+      "layer": "FE/UI",
+      "tier": "minicex-fe",
+      "title": "The bridge form locks a withdrawal",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\" funded with 1.0 BTC",
+        "When the bridge form is submitted withdrawing 0.3 BTC to chain \"ethereum\" for \"alice\"",
+        "Then the form result status is 201",
+        "And the form result code is \"ok\""
+      ]
+    },
+    "58": {
+      "module": "05-cex-fe",
+      "layer": "FE/UI",
+      "tier": "minicex-fe",
+      "title": "The transfer form refuses an overdraw",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\" funded with 0.1 BTC",
+        "And a fresh account \"bob\"",
+        "When the transfer form is submitted moving 9.0 BTC from \"alice\" to \"bob\"",
+        "Then the form result status is 409",
+        "And the form result code is \"insufficient_funds\""
       ]
     }
   }

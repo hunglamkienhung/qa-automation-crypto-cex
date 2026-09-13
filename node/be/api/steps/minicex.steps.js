@@ -85,6 +85,13 @@ Then('the API balance for {string} in {word} is {float} {word}', async function 
     assert(this, `API balance ${alias}/${asset}`, got === coin(amt), `got ${got}, want ${coin(amt)}`);
   });
 });
+Then('the API balance for {string} in {word} is above zero', async function (alias, asset) {
+  await act(this, async () => {
+    const r = await cex.get('/balances/' + acctOf(this, alias).handle);
+    const row = (r.body.balances || []).find((x) => x.asset === asset);
+    assert(this, `API balance ${alias}/${asset} > 0`, !!row && row.amount > 0, row ? ('got ' + row.amount) : 'no ' + asset + ' row');
+  });
+});
 Then('the swap response output equals the quote for {float} {word} to {word}', async function (amt, from, to) {
   await act(this, async () => {
     const q = await cex.quote(from, to, coin(amt));

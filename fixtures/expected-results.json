@@ -8,8 +8,8 @@
     "No case is declared Failed: nothing here is currently failing, and manufacturing a failure to have one would be dishonest."
   ],
   "summary": {
-    "total": 54,
-    "Passed": 54,
+    "total": 58,
+    "Passed": 58,
     "Failed": 0,
     "Blocked": 0,
     "note": "nominal: mini-cex running and seeded, Kraken reachable, a browser available for the FE tier"
@@ -198,6 +198,22 @@
       "Blocked"
     ],
     "54": [
+      "Passed",
+      "Blocked"
+    ],
+    "55": [
+      "Passed",
+      "Blocked"
+    ],
+    "56": [
+      "Passed",
+      "Blocked"
+    ],
+    "57": [
+      "Passed",
+      "Blocked"
+    ],
+    "58": [
       "Passed",
       "Blocked"
     ]

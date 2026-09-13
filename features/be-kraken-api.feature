@@ -24,15 +24,15 @@ Feature: The live Kraken public API, read-only
 
   @case:36 @priority:high
   Scenario: Kraken quotes a positive BTC price
-    When the Kraken last price for "XBT/USD" is read
+    When the Kraken last price for "XBTUSD" is read
     Then the Kraken price is a positive number
 
   @case:37 @priority:high
   Scenario: The mini-cex BTC price is the same order of magnitude as Kraken's
-    When the Kraken last price for "XBT/USD" is read
+    When the Kraken last price for "XBTUSD" is read
     Then the mini-cex BTC price is the same order of magnitude as Kraken's
 
   @case:38 @priority:medium
   Scenario: Kraken quotes a positive ETH price
-    When the Kraken last price for "ETH/USD" is read
+    When the Kraken last price for "ETHUSD" is read
     Then the Kraken price is a positive number

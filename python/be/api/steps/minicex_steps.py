@@ -146,6 +146,15 @@ def api_balance(qa, alias, asset, amt, a2):
     act(qa, go)
 
 
+@then(parsers.parse('the API balance for "{alias}" in {asset} is above zero'))
+def api_balance_positive(qa, alias, asset):
+    def go():
+        r = cex.get("/balances/" + acct(qa, alias)["handle"])
+        row = next((x for x in (r["body"]["balances"] or []) if x["asset"] == asset), None)
+        assert_(qa, f"API balance {alias}/{asset} > 0", bool(row) and row["amount"] > 0, f"got {row['amount']}" if row else f"no {asset} row")
+    act(qa, go)
+
+
 @then(parsers.parse("the swap response output equals the quote for {amt:f} {frm} to {to}"))
 def swap_output_matches(qa, amt, frm, to):
     def go():

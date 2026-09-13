@@ -158,6 +158,7 @@ function main() {
     if (req.method === 'GET' && parts.length === 0) return renderHome(res);
     if (req.method === 'GET' && a === 'wallet' && b) return renderWallet(res, b);
     if (req.method === 'GET' && a === 'op' && b) return renderOp(res, b);
+    if (req.method === 'GET' && a === 'forms' && b) return renderForm(res, b);
 
     // ---- read-only market data ----
     if (req.method === 'GET' && a === 'assets') {
@@ -322,7 +323,8 @@ function main() {
   // ---- HTML renderers (minimal, labelled for Playwright) ----
   function renderHome(res) {
     const rows = q.assets.all().map((x) => `<li class="asset" data-symbol="${esc(x.symbol)}"><span class="symbol">${esc(x.symbol)}</span> <span class="name">${esc(x.name)}</span> <span class="usd">$${(x.usd_micro / 1e6).toFixed(2)}</span> <span class="active">${x.active ? 'listed' : 'delisted'}</span></li>`).join('');
-    return html(res, 200, `<title>mini-cex</title><h1>mini-cex</h1><ul class="assets">${rows}</ul>`);
+    const nav = '<nav class="forms"><a href="/forms/transfer">Transfer</a> · <a href="/forms/swap">Swap</a> · <a href="/forms/bridge">Bridge</a></nav>';
+    return html(res, 200, `<title>mini-cex</title><h1>mini-cex</h1>${nav}<ul class="assets">${rows}</ul>`);
   }
   function renderWallet(res, handle) {
     const acct = q.accountByHandle.get(handle);
@@ -334,6 +336,51 @@ function main() {
     const op = q.bridge.get(Number(id));
     if (!op) return html(res, 404, '<title>op</title><p>no such op</p>');
     return html(res, 200, `<title>bridge op ${op.id}</title><h1 class="op-id">Op ${op.id}</h1><p class="direction">${esc(op.direction)}</p><p class="status">${esc(op.status)}</p><p class="amount">${(op.amount / 1e8)} ${esc(op.asset)}</p>`);
+  }
+
+  /**
+   * An interactive form for one write path. The submit handler POSTs to the
+   * same REST endpoint the API tier tests, converting the decimal-coin amount
+   * to base units, and writes the outcome (status + code + a result line) into
+   * #result -- so a Playwright test can drive a real transfer/swap/bridge
+   * through the browser and read what happened. The bearer token is a field
+   * because mini-cex has no session; that is fine for a local teaching model.
+   */
+  function renderForm(res, action) {
+    const forms = {
+      transfer: {
+        title: 'Transfer', endpoint: '/transfer',
+        fields: [['to', 'to handle', ''], ['asset', 'asset', 'BTC'], ['amount', 'amount (coins)', '']],
+        body: "{ to_handle: v('to'), asset: v('asset'), amount: coin('amount') }",
+        okMsg: "'ok: transfer #' + b.id",
+      },
+      swap: {
+        title: 'Swap', endpoint: '/swap',
+        fields: [['from', 'from asset', 'BTC'], ['to', 'to asset', 'USD'], ['amount', 'from amount (coins)', '']],
+        body: "{ from_asset: v('from'), to_asset: v('to'), from_amount: coin('amount') }",
+        okMsg: "'ok: swap #' + b.id + ' -> ' + (b.to_amount/1e8)",
+      },
+      bridge: {
+        title: 'Bridge withdraw', endpoint: '/bridge/withdraw',
+        fields: [['asset', 'asset', 'BTC'], ['amount', 'amount (coins)', ''], ['chain', 'destination chain', 'ethereum']],
+        body: "{ asset: v('asset'), amount: coin('amount'), dst_chain: v('chain') }",
+        okMsg: "'ok: op #' + b.id + ' ' + b.status",
+      },
+    };
+    const f = forms[action];
+    if (!f) return html(res, 404, '<title>form</title><p>no such form</p>');
+    const inputs = [['token', 'bearer token', '']].concat(f.fields)
+      .map(([id, ph, dv]) => `<input id="${id}" class="f-${id}" placeholder="${esc(ph)}" value="${esc(dv)}">`).join('');
+    const script =
+      "function v(id){return document.getElementById(id).value.trim();}" +
+      "function coin(id){return Math.round(parseFloat(v(id))*1e8);}" +
+      "document.getElementById('go').addEventListener('click',async function(e){e.preventDefault();" +
+      "var r=document.getElementById('result');r.textContent='sending...';r.removeAttribute('data-status');" +
+      "try{var res=await fetch('" + f.endpoint + "',{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+v('token')},body:JSON.stringify(" + f.body + ")});" +
+      "var b=await res.json();r.setAttribute('data-status',res.status);r.setAttribute('data-code',(b&&b.code)||'ok');" +
+      "r.textContent=(res.status===201||res.status===200)?(" + f.okMsg + "):('error: '+(b&&b.code));" +
+      "}catch(err){r.setAttribute('data-status','0');r.setAttribute('data-code','network');r.textContent='error: '+err.message;}});";
+    return html(res, 200, `<title>${f.title}</title><h1 class="form-title">${f.title}</h1><form id="form">${inputs}<button id="go" type="submit">${f.title}</button></form><div id="result" class="result"></div><script>${script}</script>`);
   }
 
   const server = http.createServer(async (req, res) => {

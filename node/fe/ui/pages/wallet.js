@@ -46,6 +46,25 @@ class WalletPage {
     const read = async (sel) => (await this.page.$(sel)) ? (await this.page.$eval(sel, (e) => e.textContent.trim())) : null;
     return { idText: await read('h1.op-id'), directionText: await read('.direction'), statusText: await read('.status'), amountText: await read('.amount') };
   }
+
+  /** Open a write form (/forms/transfer|swap|bridge). */
+  async openForm(action) {
+    await this.open('/forms/' + action);
+    await this.page.waitForSelector('#form', { timeout: 15_000 }).catch(() => { throw new ScreenNotReady(action + ' form never rendered'); });
+  }
+  /** Fill fields by id, submit, and wait for the result line the handler writes. */
+  async submitForm(values) {
+    for (const [id, val] of Object.entries(values)) await this.page.fill('#' + id, String(val));
+    await this.page.click('#go');
+    await this.page.waitForSelector('#result[data-status]', { timeout: 15_000 }).catch(() => { throw new ScreenNotReady('form result never appeared'); });
+  }
+  async formResult() {
+    return {
+      status: Number(await this.page.getAttribute('#result', 'data-status')),
+      code: await this.page.getAttribute('#result', 'data-code'),
+      text: (await this.page.textContent('#result')) || '',
+    };
+  }
 }
 
 module.exports = { WalletPage, ScreenNotReady, BASE };

@@ -24,6 +24,10 @@ def acct(qa, alias):
     return qa.accounts[alias]
 
 
+def coin(n):
+    return round(float(n) * 1e8)
+
+
 @given("the service is reachable and the home page is open")
 def home_open(page, qa):
     page.set_viewport_size({"width": 1440, "height": 900})
@@ -121,3 +125,42 @@ def open_op(qa):
 @then(parsers.parse('the op status on screen is "{status}"'))
 def op_status_screen(qa, status):
     screen(qa, "op status on screen", lambda: (qa.screen.get("op") and qa.screen["op"]["statusText"] == status, qa.screen["op"]["statusText"] if qa.screen.get("op") else "no op page"))
+
+
+# ---------------------------------------------------------------- interactive forms
+
+@when(parsers.parse('the transfer form is submitted moving {amt:f} {asset} from "{frm}" to "{to}"'))
+def submit_transfer_form(qa, amt, asset, frm, to):
+    def go():
+        qa.wallet.open_form("transfer")
+        qa.wallet.submit_form({"token": acct(qa, frm)["token"], "to": acct(qa, to)["handle"], "asset": asset, "amount": amt})
+        qa.form_result = qa.wallet.form_result()
+    qa.fetch_or_block(UNREACHABLE, go)
+
+
+@when(parsers.parse('the swap form is submitted converting {amt:f} {frm} to {to} for "{alias}"'))
+def submit_swap_form(qa, amt, frm, to, alias):
+    def go():
+        qa.wallet.open_form("swap")
+        qa.wallet.submit_form({"token": acct(qa, alias)["token"], "from": frm, "to": to, "amount": amt})
+        qa.form_result = qa.wallet.form_result()
+    qa.fetch_or_block(UNREACHABLE, go)
+
+
+@when(parsers.parse('the bridge form is submitted withdrawing {amt:f} {asset} to chain "{chain}" for "{alias}"'))
+def submit_bridge_form(qa, amt, asset, chain, alias):
+    def go():
+        qa.wallet.open_form("bridge")
+        qa.wallet.submit_form({"token": acct(qa, alias)["token"], "asset": asset, "amount": amt, "chain": chain})
+        qa.form_result = qa.wallet.form_result()
+    qa.fetch_or_block(UNREACHABLE, go)
+
+
+@then(parsers.parse("the form result status is {code:d}"))
+def form_result_status(qa, code):
+    screen(qa, f"form result status {code}", lambda: (getattr(qa, "form_result", None) is not None and qa.form_result["status"] == code, (f"got {qa.form_result['status']} -- {qa.form_result['text']}" if getattr(qa, "form_result", None) else "no result")))
+
+
+@then(parsers.parse('the form result code is "{code}"'))
+def form_result_code(qa, code):
+    screen(qa, f"form result code {code}", lambda: (getattr(qa, "form_result", None) is not None and qa.form_result["code"] == code, (f"got {qa.form_result['code']}" if getattr(qa, "form_result", None) else "no result")))

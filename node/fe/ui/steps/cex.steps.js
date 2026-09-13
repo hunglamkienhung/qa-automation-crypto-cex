@@ -14,6 +14,7 @@ const { MiniCex, ApiUnreachable } = require('../../../be/api/venues/minicex');
 
 const cex = new MiniCex();
 const acctOf = (world, alias) => world.accounts[alias];
+const coin = (n) => Math.round(Number(n) * 1e8);
 
 Given('the service is reachable and the home page is open', { timeout: 90_000 }, async function () {
   this.wallet = new WalletPage(this.page);
@@ -60,4 +61,34 @@ When('the op page for that bridge op is opened', { timeout: 90_000 }, async func
 });
 Then('the op status on screen is {string}', async function (status) {
   await screen(this, 'op status on screen', async () => ({ passed: this.screen.op && this.screen.op.statusText === status, detail: this.screen.op ? this.screen.op.statusText : 'no op page' }));
+});
+
+// ---------------------------------------------------------------- interactive forms
+
+When('the transfer form is submitted moving {float} {word} from {string} to {string}', { timeout: 90_000 }, async function (amt, asset, fromA, toA) {
+  await this.fetchOrBlock([ScreenNotReady], async () => {
+    await this.wallet.openForm('transfer');
+    await this.wallet.submitForm({ token: acctOf(this, fromA).token, to: acctOf(this, toA).handle, asset, amount: amt });
+    this.formResult = await this.wallet.formResult();
+  });
+});
+When('the swap form is submitted converting {float} {word} to {word} for {string}', { timeout: 90_000 }, async function (amt, from, to, alias) {
+  await this.fetchOrBlock([ScreenNotReady], async () => {
+    await this.wallet.openForm('swap');
+    await this.wallet.submitForm({ token: acctOf(this, alias).token, from, to, amount: amt });
+    this.formResult = await this.wallet.formResult();
+  });
+});
+When('the bridge form is submitted withdrawing {float} {word} to chain {string} for {string}', { timeout: 90_000 }, async function (amt, asset, chain, alias) {
+  await this.fetchOrBlock([ScreenNotReady], async () => {
+    await this.wallet.openForm('bridge');
+    await this.wallet.submitForm({ token: acctOf(this, alias).token, asset, amount: amt, chain });
+    this.formResult = await this.wallet.formResult();
+  });
+});
+Then('the form result status is {int}', async function (code) {
+  await screen(this, 'form result status ' + code, async () => ({ passed: this.formResult && this.formResult.status === code, detail: this.formResult ? ('got ' + this.formResult.status + ' -- ' + this.formResult.text) : 'no result' }));
+});
+Then('the form result code is {string}', async function (code) {
+  await screen(this, 'form result code ' + code, async () => ({ passed: this.formResult && this.formResult.code === code, detail: this.formResult ? ('got ' + this.formResult.code) : 'no result' }));
 });
