@@ -62,6 +62,10 @@ class Store:
         r = self.get("SELECT amount FROM balances WHERE account_id = ? AND asset = ?", account_id, asset)
         return int(r["amount"]) if r else 0
 
+    def reserved(self, account_id, asset):
+        r = self.get("SELECT reserved FROM balances WHERE account_id = ? AND asset = ?", account_id, asset)
+        return int(r["reserved"]) if r else 0
+
     def ledger_balance(self, account_id, asset):
         return int(self.get("SELECT COALESCE(SUM(delta),0) AS s FROM ledger WHERE account_id = ? AND asset = ?", account_id, asset)["s"])
 

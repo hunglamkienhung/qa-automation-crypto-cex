@@ -34,6 +34,7 @@ class Store {
 
   accountId(handle) { const r = this.get('SELECT id FROM accounts WHERE handle = ?', handle); return r ? Number(r.id) : null; }
   balance(accountId, asset) { const r = this.get('SELECT amount FROM balances WHERE account_id = ? AND asset = ?', accountId, asset); return r ? Number(r.amount) : 0; }
+  reserved(accountId, asset) { const r = this.get('SELECT reserved FROM balances WHERE account_id = ? AND asset = ?', accountId, asset); return r ? Number(r.reserved) : 0; }
 
   /** The balance an account+asset's ledger implies: the sum of its movements. */
   ledgerBalance(accountId, asset) {

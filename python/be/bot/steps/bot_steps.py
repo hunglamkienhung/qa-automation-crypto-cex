@@ -42,22 +42,22 @@ def kill_switch(qa):
     qa.engine = RiskEngine(kill_switch=True)
 
 
-@when(parsers.parse("the engine plans a transfer of {amt:f} {asset}"))
+@when(parsers.parse("the engine plans a transfer of {amt:g} {asset}"))
 def plan_transfer(qa, amt, asset):
     qa.decision = qa.engine.plan({"kind": "transfer", "asset": asset, "amount": coin(amt)}, qa.ctx)
 
 
-@when(parsers.parse("the engine plans a swap of {amt:f} {frm} to {to}"))
+@when(parsers.parse("the engine plans a swap of {amt:g} {frm} to {to}"))
 def plan_swap(qa, amt, frm, to):
     qa.decision = qa.engine.plan({"kind": "swap", "from": frm, "to": to, "amount": coin(amt)}, qa.ctx)
 
 
-@when(parsers.parse("the engine plans a swap of {amt:f} {frm} to {to} demanding at least {minv:f} {q}"))
+@when(parsers.parse("the engine plans a swap of {amt:g} {frm} to {to} demanding at least {minv:g} {q}"))
 def plan_swap_min(qa, amt, frm, to, minv, q):
     qa.decision = qa.engine.plan({"kind": "swap", "from": frm, "to": to, "amount": coin(amt), "min_to": coin(minv)}, qa.ctx)
 
 
-@when(parsers.parse('the engine plans a bridge of {amt:f} {asset} to chain "{chain}"'))
+@when(parsers.parse('the engine plans a bridge of {amt:g} {asset} to chain "{chain}"'))
 def plan_bridge(qa, amt, asset, chain):
     qa.decision = qa.engine.plan({"kind": "bridge", "asset": asset, "amount": coin(amt), "dst_chain": chain}, qa.ctx)
 

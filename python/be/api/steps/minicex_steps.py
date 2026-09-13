@@ -51,7 +51,7 @@ def read_pairs(qa):
     act(qa, lambda: setattr(qa, "api", cex.get("/pairs")))
 
 
-@when(parsers.parse("a quote of {amt:f} {frm} to {to} is requested"))
+@when(parsers.parse("a quote of {amt:g} {frm} to {to} is requested"))
 def request_quote(qa, amt, frm, to):
     def go():
         qa.api = cex.quote(frm, to, coin(amt))
@@ -136,7 +136,7 @@ def quote_fee(qa):
     assert_(qa, "quote fee matches bps", q["fee_amount"] == expected, f"fee {q['fee_amount']}, expected {expected} at {q['fee_bps']}bps")
 
 
-@then(parsers.parse('the API balance for "{alias}" in {asset} is {amt:f} {a2}'))
+@then(parsers.parse('the API balance for "{alias}" in {asset} is {amt:g} {a2}'))
 def api_balance(qa, alias, asset, amt, a2):
     def go():
         r = cex.get("/balances/" + acct(qa, alias)["handle"])
@@ -155,7 +155,7 @@ def api_balance_positive(qa, alias, asset):
     act(qa, go)
 
 
-@then(parsers.parse("the swap response output equals the quote for {amt:f} {frm} to {to}"))
+@then(parsers.parse("the swap response output equals the quote for {amt:g} {frm} to {to}"))
 def swap_output_matches(qa, amt, frm, to):
     def go():
         q = cex.quote(frm, to, coin(amt))

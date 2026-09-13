@@ -37,17 +37,21 @@ CREATE TABLE IF NOT EXISTS pairs (
 );
 
 CREATE TABLE IF NOT EXISTS accounts (
-  id          INTEGER PRIMARY KEY,
-  handle      TEXT    NOT NULL UNIQUE,
-  token       TEXT    UNIQUE,            -- the API bearer, issued at creation
-  created_at  INTEGER NOT NULL
+  id                INTEGER PRIMARY KEY,
+  handle            TEXT    NOT NULL UNIQUE,
+  token             TEXT    UNIQUE,            -- the API bearer, issued at creation
+  volume_usd_micro  INTEGER NOT NULL DEFAULT 0 CHECK (volume_usd_micro >= 0),  -- taker volume, drives the fee tier
+  created_at        INTEGER NOT NULL
 );
 
 -- One row per (account, asset). amount is in base units and never negative.
+-- `reserved` is the part locked by resting orders and stakes; the tradable
+-- balance is amount - reserved, and reserved can never exceed amount.
 CREATE TABLE IF NOT EXISTS balances (
   account_id  INTEGER NOT NULL REFERENCES accounts(id),
   asset       TEXT    NOT NULL REFERENCES assets(symbol),
   amount      INTEGER NOT NULL DEFAULT 0 CHECK (amount >= 0),
+  reserved    INTEGER NOT NULL DEFAULT 0 CHECK (reserved >= 0 AND reserved <= amount),
   PRIMARY KEY (account_id, asset)
 );
 
@@ -61,8 +65,9 @@ CREATE TABLE IF NOT EXISTS ledger (
   delta       INTEGER NOT NULL CHECK (delta <> 0),
   reason      TEXT    NOT NULL CHECK (reason IN
                 ('seed','deposit','withdraw','transfer_in','transfer_out',
-                 'swap_in','swap_out','fee','bridge_credit','bridge_debit')),
-  ref_type    TEXT,                       -- 'transfer' | 'swap' | 'bridge' | NULL
+                 'swap_in','swap_out','fee','bridge_credit','bridge_debit',
+                 'trade_in','trade_out','stake_lock','stake_unlock','stake_reward')),
+  ref_type    TEXT,                       -- 'transfer' | 'swap' | 'bridge' | 'order' | 'stake' | NULL
   ref_id      INTEGER,
   created_at  INTEGER NOT NULL
 );
@@ -117,4 +122,85 @@ CREATE TABLE IF NOT EXISTS bridge_ops (
   updated_at  INTEGER NOT NULL,
   UNIQUE (direction, ext_tx),
   CHECK (src_chain <> dst_chain)
+);
+
+-- ============================ v2: spot order book ============================
+
+-- The maker-taker fee schedule, by 30-day taker volume. tier 0 is the entry
+-- band; a maker_bps below zero is a rebate the maker is paid.
+CREATE TABLE IF NOT EXISTS fee_tiers (
+  tier             INTEGER PRIMARY KEY,
+  min_volume_micro INTEGER NOT NULL CHECK (min_volume_micro >= 0),  -- USD * 1e6
+  maker_bps        INTEGER NOT NULL,                                 -- may be < 0 (rebate)
+  taker_bps        INTEGER NOT NULL CHECK (taker_bps >= 0)
+);
+
+-- A spot order on one pair. price is NULL for a market order. filled never
+-- exceeds size; a resting order holds its funds in balances.reserved.
+CREATE TABLE IF NOT EXISTS orders (
+  id              INTEGER PRIMARY KEY,
+  account_id      INTEGER NOT NULL REFERENCES accounts(id),
+  base            TEXT    NOT NULL REFERENCES assets(symbol),
+  quote           TEXT    NOT NULL REFERENCES assets(symbol),
+  side            TEXT    NOT NULL CHECK (side IN ('buy', 'sell')),
+  type            TEXT    NOT NULL CHECK (type IN ('limit', 'market')),
+  price           INTEGER CHECK (price IS NULL OR price > 0),   -- quote per whole base, USD-style micro of the pair
+  size            INTEGER NOT NULL CHECK (size > 0),            -- base units
+  filled          INTEGER NOT NULL DEFAULT 0 CHECK (filled >= 0 AND filled <= size),
+  status          TEXT    NOT NULL CHECK (status IN ('open', 'partial', 'filled', 'cancelled', 'rejected')),
+  tif             TEXT    NOT NULL DEFAULT 'GTC' CHECK (tif IN ('GTC', 'IOC', 'FOK')),
+  post_only       INTEGER NOT NULL DEFAULT 0 CHECK (post_only IN (0, 1)),
+  idempotency_key TEXT    UNIQUE,
+  created_at      INTEGER NOT NULL,
+  seq             INTEGER NOT NULL,                             -- monotonic, for price-time priority
+  CHECK (base <> quote)
+);
+CREATE INDEX IF NOT EXISTS orders_book ON orders(base, quote, side, status);
+
+-- One match between a taker and a resting maker order. Fees are in the leg each
+-- side receives; a taker and its maker are never the same account.
+CREATE TABLE IF NOT EXISTS fills (
+  id            INTEGER PRIMARY KEY,
+  taker_order   INTEGER NOT NULL REFERENCES orders(id),
+  maker_order   INTEGER NOT NULL REFERENCES orders(id),
+  base          TEXT    NOT NULL REFERENCES assets(symbol),
+  quote         TEXT    NOT NULL REFERENCES assets(symbol),
+  price         INTEGER NOT NULL CHECK (price > 0),
+  size          INTEGER NOT NULL CHECK (size > 0),             -- base units matched
+  taker_fee     INTEGER NOT NULL DEFAULT 0,
+  maker_fee     INTEGER NOT NULL DEFAULT 0,                    -- may be < 0 (rebate paid to maker)
+  taker_account INTEGER NOT NULL REFERENCES accounts(id),
+  maker_account INTEGER NOT NULL REFERENCES accounts(id),
+  created_at    INTEGER NOT NULL,
+  CHECK (taker_account <> maker_account)
+);
+
+-- ============================ v2: API keys ============================
+
+-- A scoped programmatic key. Presented in the X-API-Key header; the scope gates
+-- what it can do (read < trade < withdraw), and rate_per_min caps its calls.
+CREATE TABLE IF NOT EXISTS api_keys (
+  key          TEXT    PRIMARY KEY,
+  account_id   INTEGER NOT NULL REFERENCES accounts(id),
+  scope        TEXT    NOT NULL CHECK (scope IN ('read', 'trade', 'withdraw')),
+  rate_per_min INTEGER NOT NULL DEFAULT 120 CHECK (rate_per_min > 0),
+  revoked      INTEGER NOT NULL DEFAULT 0 CHECK (revoked IN (0, 1)),
+  created_at   INTEGER NOT NULL
+);
+
+-- ============================ v2: staking / earn ============================
+
+-- A locked principal accruing a fixed APR. Accrual is driven by explicit
+-- simulated seconds, so it is deterministic and independent of the wall clock.
+CREATE TABLE IF NOT EXISTS stakes (
+  id              INTEGER PRIMARY KEY,
+  account_id      INTEGER NOT NULL REFERENCES accounts(id),
+  asset           TEXT    NOT NULL REFERENCES assets(symbol),
+  principal       INTEGER NOT NULL CHECK (principal > 0),
+  apr_bps         INTEGER NOT NULL CHECK (apr_bps >= 0),
+  elapsed_seconds INTEGER NOT NULL DEFAULT 0 CHECK (elapsed_seconds >= 0),
+  accrued         INTEGER NOT NULL DEFAULT 0 CHECK (accrued >= 0),
+  status          TEXT    NOT NULL CHECK (status IN ('active', 'redeemed')),
+  idempotency_key TEXT    UNIQUE,
+  created_at      INTEGER NOT NULL
 );

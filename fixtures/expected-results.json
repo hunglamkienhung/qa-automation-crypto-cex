@@ -8,8 +8,8 @@
     "No case is declared Failed: nothing here is currently failing, and manufacturing a failure to have one would be dishonest."
   ],
   "summary": {
-    "total": 58,
-    "Passed": 58,
+    "total": 98,
+    "Passed": 98,
     "Failed": 0,
     "Blocked": 0,
     "note": "nominal: mini-cex running and seeded, Kraken reachable, a browser available for the FE tier"
@@ -214,6 +214,166 @@
       "Blocked"
     ],
     "58": [
+      "Passed",
+      "Blocked"
+    ],
+    "59": [
+      "Passed",
+      "Blocked"
+    ],
+    "60": [
+      "Passed",
+      "Blocked"
+    ],
+    "61": [
+      "Passed",
+      "Blocked"
+    ],
+    "62": [
+      "Passed",
+      "Blocked"
+    ],
+    "63": [
+      "Passed",
+      "Blocked"
+    ],
+    "64": [
+      "Passed",
+      "Blocked"
+    ],
+    "65": [
+      "Passed",
+      "Blocked"
+    ],
+    "66": [
+      "Passed",
+      "Blocked"
+    ],
+    "67": [
+      "Passed",
+      "Blocked"
+    ],
+    "68": [
+      "Passed",
+      "Blocked"
+    ],
+    "69": [
+      "Passed",
+      "Blocked"
+    ],
+    "70": [
+      "Passed",
+      "Blocked"
+    ],
+    "71": [
+      "Passed",
+      "Blocked"
+    ],
+    "72": [
+      "Passed",
+      "Blocked"
+    ],
+    "73": [
+      "Passed",
+      "Blocked"
+    ],
+    "74": [
+      "Passed",
+      "Blocked"
+    ],
+    "75": [
+      "Passed",
+      "Blocked"
+    ],
+    "76": [
+      "Passed",
+      "Blocked"
+    ],
+    "77": [
+      "Passed",
+      "Blocked"
+    ],
+    "78": [
+      "Passed",
+      "Blocked"
+    ],
+    "79": [
+      "Passed",
+      "Blocked"
+    ],
+    "80": [
+      "Passed",
+      "Blocked"
+    ],
+    "81": [
+      "Passed",
+      "Blocked"
+    ],
+    "82": [
+      "Passed",
+      "Blocked"
+    ],
+    "83": [
+      "Passed",
+      "Blocked"
+    ],
+    "84": [
+      "Passed",
+      "Blocked"
+    ],
+    "85": [
+      "Passed",
+      "Blocked"
+    ],
+    "86": [
+      "Passed",
+      "Blocked"
+    ],
+    "87": [
+      "Passed",
+      "Blocked"
+    ],
+    "88": [
+      "Passed",
+      "Blocked"
+    ],
+    "89": [
+      "Passed",
+      "Blocked"
+    ],
+    "90": [
+      "Passed",
+      "Blocked"
+    ],
+    "91": [
+      "Passed",
+      "Blocked"
+    ],
+    "92": [
+      "Passed",
+      "Blocked"
+    ],
+    "93": [
+      "Passed",
+      "Blocked"
+    ],
+    "94": [
+      "Passed",
+      "Blocked"
+    ],
+    "95": [
+      "Passed",
+      "Blocked"
+    ],
+    "96": [
+      "Passed",
+      "Blocked"
+    ],
+    "97": [
+      "Passed",
+      "Blocked"
+    ],
+    "98": [
       "Passed",
       "Blocked"
     ]

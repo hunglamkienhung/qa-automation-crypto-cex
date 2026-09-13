@@ -13,6 +13,9 @@ pytest_plugins = [
     "be.api.steps.minicex_steps",
     "be.api.steps.kraken_steps",
     "be.bot.steps.bot_steps",
+    "be.api.steps.orders_steps",
+    "be.api.steps.apikeys_steps",
+    "be.api.steps.earn_steps",
 ]
 
 

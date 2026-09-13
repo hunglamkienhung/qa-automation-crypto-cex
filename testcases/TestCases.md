@@ -1,8 +1,8 @@
 # Crypto CEX — test cases
 
-58 cases across a self-written mini-cex (with a real SQLite database) and the live Kraken public API. Generated from `../features/*.feature` by `build.js`; do not edit by hand.
+98 cases across a self-written mini-cex (with a real SQLite database) and the live Kraken public API. Generated from `../features/*.feature` by `build.js`; do not edit by hand.
 
-## minicex-db (14)
+## minicex-db (23)
 
 | ID | Layer | Priority | Title |
 |---|---|---|---|
@@ -20,8 +20,17 @@
 | 12 | BE/DB | High | A bridge withdrawal locks the balance with a debit line |
 | 13 | BE/DB | High | A bridge deposit credits once even when observed twice |
 | 14 | BE/DB | High | An overdrawn transfer leaves both balances untouched |
+| 59 | BE/DB | High | A balance's reserved part can never exceed its total |
+| 60 | BE/DB | High | An order's filled amount can never exceed its size |
+| 61 | BE/DB | High | A fill never has the same account on both sides |
+| 64 | BE/DB | High | A crossing taker matches the maker at the maker's price |
+| 65 | BE/DB | High | A match moves base to the taker and quote to the maker |
+| 75 | BE/DB | High | A match conserves value across the two sides |
+| 89 | BE/DB | High | A stake principal must be positive |
+| 91 | BE/DB | High | The locked principal leaves a matching ledger line |
+| 97 | BE/DB | High | A redeemed stake's ledger balances back to whole |
 
-## minicex-api (18)
+## minicex-api (49)
 
 | ID | Layer | Priority | Title |
 |---|---|---|---|
@@ -43,6 +52,37 @@
 | 30 | BE/API | High | A bridge to an unknown chain is refused |
 | 31 | BE/API | Medium | A bridge deposit is idempotent by external tx |
 | 32 | BE/API | Medium | A swap of an unknown asset is not found |
+| 62 | BE/API | High | A limit order that does not cross rests on the book |
+| 63 | BE/API | High | Placing a sell reserves the base it offers |
+| 66 | BE/API | High | The taker pays the taker fee and the maker pays the maker fee |
+| 67 | BE/API | High | A partial fill leaves the remainder resting |
+| 68 | BE/API | High | Matching takes the best price first |
+| 69 | BE/API | High | A taker never matches its own resting order |
+| 70 | BE/API | High | Cancelling an order releases its reserve |
+| 71 | BE/API | High | A post-only order that would cross is rejected |
+| 72 | BE/API | High | A fill-or-kill order that cannot fully fill is killed |
+| 73 | BE/API | High | An IOC order fills what it can and cancels the rest |
+| 74 | BE/API | Medium | A market buy sweeps the book at the resting price |
+| 76 | BE/API | Medium | The fee schedule lists the maker-taker tiers |
+| 77 | BE/API | Medium | A below-minimum order is refused |
+| 78 | BE/API | Medium | A repeated order with the same idempotency key makes one order |
+| 79 | BE/API | High | Minting a key returns the key and its scope |
+| 80 | BE/API | High | A read-scoped key cannot place an order |
+| 81 | BE/API | High | A trade-scoped key can place an order |
+| 82 | BE/API | High | A trade-scoped key cannot withdraw |
+| 83 | BE/API | High | A withdraw-scoped key can withdraw |
+| 84 | BE/API | High | A revoked key is rejected |
+| 85 | BE/API | High | An unknown key is rejected |
+| 86 | BE/API | High | A key over its rate limit is throttled |
+| 87 | BE/API | Medium | Minting a key requires the owner token, not a key |
+| 88 | BE/API | Medium | A key is listed under its account |
+| 90 | BE/API | High | Staking locks the principal out of the balance |
+| 92 | BE/API | High | Accrual over a year equals the APR on the principal |
+| 93 | BE/API | High | Accrual is proportional to the elapsed time |
+| 94 | BE/API | High | Redeeming returns the principal plus the reward |
+| 95 | BE/API | High | A stake cannot be redeemed twice |
+| 96 | BE/API | High | Staking more than the balance is refused |
+| 98 | BE/API | Medium | Staked funds are not available to withdraw |
 
 ## kraken-api (6)
 

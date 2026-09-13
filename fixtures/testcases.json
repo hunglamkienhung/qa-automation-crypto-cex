@@ -9,7 +9,7 @@
       "minicex-fe": "mini-cex HTML pages (Playwright)"
     },
     "idPolicy": "immutable",
-    "nextId": 59,
+    "nextId": 99,
     "note": "Generated from features/*.feature by testcases/build.js. Every scenario carries @case:N; an N missing here is an error."
   },
   "cases": {
@@ -733,6 +733,550 @@
         "When the transfer form is submitted moving 9.0 BTC from \"alice\" to \"bob\"",
         "Then the form result status is 409",
         "And the form result code is \"insufficient_funds\""
+      ]
+    },
+    "59": {
+      "module": "06-cex-orders",
+      "layer": "BE/DB",
+      "tier": "minicex-db",
+      "title": "A balance's reserved part can never exceed its total",
+      "priority": "High",
+      "steps": [
+        "Given a throwaway database with the schema applied",
+        "Then inserting a balance whose reserved exceeds its amount fails a CHECK"
+      ]
+    },
+    "60": {
+      "module": "06-cex-orders",
+      "layer": "BE/DB",
+      "tier": "minicex-db",
+      "title": "An order's filled amount can never exceed its size",
+      "priority": "High",
+      "steps": [
+        "Given a throwaway database with the schema applied",
+        "Then inserting an order whose filled exceeds its size fails a CHECK"
+      ]
+    },
+    "61": {
+      "module": "06-cex-orders",
+      "layer": "BE/DB",
+      "tier": "minicex-db",
+      "title": "A fill never has the same account on both sides",
+      "priority": "High",
+      "steps": [
+        "Given a throwaway database with the schema applied",
+        "Then inserting a fill whose taker and maker are the same account fails a CHECK"
+      ]
+    },
+    "62": {
+      "module": "06-cex-orders",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "A limit order that does not cross rests on the book",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"maker\" funded with 1.0 BTC",
+        "When \"maker\" places a limit sell of 0.5 BTC at 60000 USD",
+        "Then the order status is \"open\"",
+        "And the order book has an ask of 0.5 BTC at 60000 USD"
+      ]
+    },
+    "63": {
+      "module": "06-cex-orders",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "Placing a sell reserves the base it offers",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"maker\" funded with 1.0 BTC",
+        "When \"maker\" places a limit sell of 0.4 BTC at 60000 USD",
+        "Then the reserved BTC of \"maker\" is 0.4"
+      ]
+    },
+    "64": {
+      "module": "06-cex-orders",
+      "layer": "BE/DB",
+      "tier": "minicex-db",
+      "title": "A crossing taker matches the maker at the maker's price",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"maker\" funded with 1.0 BTC",
+        "And a fresh account \"taker\" funded with 100000.0 USD",
+        "And \"maker\" places a limit sell of 0.5 BTC at 60000 USD",
+        "When \"taker\" places a limit buy of 0.5 BTC at 61000 USD",
+        "Then the order status is \"filled\"",
+        "And a fill records 0.5 BTC at 60000 USD"
+      ]
+    },
+    "65": {
+      "module": "06-cex-orders",
+      "layer": "BE/DB",
+      "tier": "minicex-db",
+      "title": "A match moves base to the taker and quote to the maker",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"maker\" funded with 1.0 BTC",
+        "And a fresh account \"taker\" funded with 100000.0 USD",
+        "And \"maker\" places a limit sell of 0.5 BTC at 60000 USD",
+        "When \"taker\" places a limit buy of 0.5 BTC at 60000 USD",
+        "Then the ledger sum for \"taker\" in BTC equals the balance row",
+        "And the ledger sum for \"maker\" in USD equals the balance row",
+        "And the API balance for \"maker\" in BTC is 0.5 BTC"
+      ]
+    },
+    "66": {
+      "module": "06-cex-orders",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "The taker pays the taker fee and the maker pays the maker fee",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"maker\" funded with 1.0 BTC",
+        "And a fresh account \"taker\" funded with 100000.0 USD",
+        "And \"maker\" places a limit sell of 1.0 BTC at 60000 USD",
+        "When \"taker\" places a limit buy of 1.0 BTC at 60000 USD",
+        "Then the last fill taker fee is 20 basis points of 1.0 BTC",
+        "And the last fill maker fee is 10 basis points of 60000.0 USD"
+      ]
+    },
+    "67": {
+      "module": "06-cex-orders",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "A partial fill leaves the remainder resting",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"maker\" funded with 1.0 BTC",
+        "And a fresh account \"taker\" funded with 100000.0 USD",
+        "And \"maker\" places a limit sell of 1.0 BTC at 60000 USD",
+        "When \"taker\" places a limit buy of 0.3 BTC at 60000 USD",
+        "Then the taker order status is \"filled\"",
+        "And the maker order for \"maker\" is \"partial\" with filled 0.3 BTC"
+      ]
+    },
+    "68": {
+      "module": "06-cex-orders",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "Matching takes the best price first",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"m1\" funded with 1.0 BTC",
+        "And a fresh account \"m2\" funded with 1.0 BTC",
+        "And a fresh account \"taker\" funded with 100000.0 USD",
+        "And \"m1\" places a limit sell of 0.5 BTC at 61000 USD",
+        "And \"m2\" places a limit sell of 0.5 BTC at 60000 USD",
+        "When \"taker\" places a limit buy of 0.5 BTC at 61000 USD",
+        "Then a fill records 0.5 BTC at 60000 USD"
+      ]
+    },
+    "69": {
+      "module": "06-cex-orders",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "A taker never matches its own resting order",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"trader\" funded with 100000.0 USD",
+        "And \"trader\" places a limit buy of 0.1 BTC at 60000 USD",
+        "And \"trader\" is funded with 1.0 BTC",
+        "When \"trader\" places a limit sell of 0.1 BTC at 60000 USD",
+        "Then the order status is \"open\"",
+        "And the order filled is 0.0 BTC"
+      ]
+    },
+    "70": {
+      "module": "06-cex-orders",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "Cancelling an order releases its reserve",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"maker\" funded with 1.0 BTC",
+        "And \"maker\" places a limit sell of 0.6 BTC at 60000 USD",
+        "When \"maker\" cancels the order",
+        "Then the order status is \"cancelled\"",
+        "And the reserved BTC of \"maker\" is 0.0"
+      ]
+    },
+    "71": {
+      "module": "06-cex-orders",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "A post-only order that would cross is rejected",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"maker\" funded with 1.0 BTC",
+        "And a fresh account \"taker\" funded with 100000.0 USD",
+        "And \"maker\" places a limit sell of 0.5 BTC at 60000 USD",
+        "When \"taker\" places a post-only buy of 0.5 BTC at 60000 USD",
+        "Then the response status is 409",
+        "And the response code is \"would_cross\""
+      ]
+    },
+    "72": {
+      "module": "06-cex-orders",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "A fill-or-kill order that cannot fully fill is killed",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"maker\" funded with 1.0 BTC",
+        "And a fresh account \"taker\" funded with 200000.0 USD",
+        "And \"maker\" places a limit sell of 0.5 BTC at 60000 USD",
+        "When \"taker\" places a FOK buy of 2.0 BTC at 60000 USD",
+        "Then the response status is 409",
+        "And the response code is \"fok_unfilled\""
+      ]
+    },
+    "73": {
+      "module": "06-cex-orders",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "An IOC order fills what it can and cancels the rest",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"maker\" funded with 1.0 BTC",
+        "And a fresh account \"taker\" funded with 200000.0 USD",
+        "And \"maker\" places a limit sell of 0.5 BTC at 60000 USD",
+        "When \"taker\" places an IOC buy of 2.0 BTC at 60000 USD",
+        "Then the order status is \"cancelled\"",
+        "And the order filled is 0.5 BTC"
+      ]
+    },
+    "74": {
+      "module": "06-cex-orders",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "A market buy sweeps the book at the resting price",
+      "priority": "Medium",
+      "steps": [
+        "Given a fresh account \"maker\" funded with 1.0 BTC",
+        "And a fresh account \"taker\" funded with 100000.0 USD",
+        "And \"maker\" places a limit sell of 0.5 BTC at 60000 USD",
+        "When \"taker\" places a market buy of 0.5 BTC paying USD",
+        "Then the order status is \"filled\"",
+        "And a fill records 0.5 BTC at 60000 USD"
+      ]
+    },
+    "75": {
+      "module": "06-cex-orders",
+      "layer": "BE/DB",
+      "tier": "minicex-db",
+      "title": "A match conserves value across the two sides",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"maker\" funded with 2.0 ETH",
+        "And a fresh account \"taker\" funded with 100000.0 USD",
+        "And \"maker\" places a limit sell of 2.0 ETH at 2500 USD",
+        "When \"taker\" places a limit buy of 2.0 ETH at 2500 USD",
+        "Then the base leaving the maker equals the base reaching the taker plus the taker fee",
+        "And the quote leaving the taker equals the quote reaching the maker plus the maker fee"
+      ]
+    },
+    "76": {
+      "module": "06-cex-orders",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "The fee schedule lists the maker-taker tiers",
+      "priority": "Medium",
+      "steps": [
+        "When the fee schedule is read",
+        "Then the entry tier charges 20 basis points taker and 10 maker",
+        "And a higher tier pays the maker a rebate"
+      ]
+    },
+    "77": {
+      "module": "06-cex-orders",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "A below-minimum order is refused",
+      "priority": "Medium",
+      "steps": [
+        "Given a fresh account \"maker\" funded with 1.0 BTC",
+        "When \"maker\" places a limit sell of 0.00001 BTC at 60000 USD",
+        "Then the response status is 400",
+        "And the response code is \"below_min\""
+      ]
+    },
+    "78": {
+      "module": "06-cex-orders",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "A repeated order with the same idempotency key makes one order",
+      "priority": "Medium",
+      "steps": [
+        "Given a fresh account \"maker\" funded with 1.0 BTC",
+        "When \"maker\" places a limit sell of 0.5 BTC at 60000 USD with key \"ord-1\"",
+        "And \"maker\" places a limit sell of 0.5 BTC at 60000 USD with key \"ord-1\"",
+        "Then the second order was an idempotent replay",
+        "And the open orders of \"maker\" number 1"
+      ]
+    },
+    "79": {
+      "module": "07-cex-apikeys",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "Minting a key returns the key and its scope",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\"",
+        "When \"alice\" mints a \"trade\" API key",
+        "Then the response status is 201",
+        "And the minted key has scope \"trade\""
+      ]
+    },
+    "80": {
+      "module": "07-cex-apikeys",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "A read-scoped key cannot place an order",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\" funded with 1.0 BTC",
+        "And \"alice\" holds a \"read\" API key",
+        "When the key places a limit sell of 0.5 BTC at 60000 USD",
+        "Then the response status is 403",
+        "And the response code is \"wrong_scope\""
+      ]
+    },
+    "81": {
+      "module": "07-cex-apikeys",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "A trade-scoped key can place an order",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\" funded with 1.0 BTC",
+        "And \"alice\" holds a \"trade\" API key",
+        "When the key places a limit sell of 0.5 BTC at 60000 USD",
+        "Then the response status is 201"
+      ]
+    },
+    "82": {
+      "module": "07-cex-apikeys",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "A trade-scoped key cannot withdraw",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\" funded with 1.0 BTC",
+        "And \"alice\" holds a \"trade\" API key",
+        "When the key withdraws 0.1 BTC",
+        "Then the response status is 403",
+        "And the response code is \"wrong_scope\""
+      ]
+    },
+    "83": {
+      "module": "07-cex-apikeys",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "A withdraw-scoped key can withdraw",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\" funded with 1.0 BTC",
+        "And \"alice\" holds a \"withdraw\" API key",
+        "When the key withdraws 0.1 BTC",
+        "Then the response status is 201"
+      ]
+    },
+    "84": {
+      "module": "07-cex-apikeys",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "A revoked key is rejected",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\" funded with 1.0 BTC",
+        "And \"alice\" holds a \"trade\" API key",
+        "And the key is revoked",
+        "When the key places a limit sell of 0.5 BTC at 60000 USD",
+        "Then the response status is 401"
+      ]
+    },
+    "85": {
+      "module": "07-cex-apikeys",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "An unknown key is rejected",
+      "priority": "High",
+      "steps": [
+        "When an unknown key places a limit sell of 0.5 BTC at 60000 USD",
+        "Then the response status is 401"
+      ]
+    },
+    "86": {
+      "module": "07-cex-apikeys",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "A key over its rate limit is throttled",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\" funded with 100.0 BTC",
+        "And \"alice\" holds a \"trade\" API key limited to 2 per minute",
+        "When the key deposits 1.0 BTC three times",
+        "Then the last response status is 429",
+        "And the response code is \"rate_limited\""
+      ]
+    },
+    "87": {
+      "module": "07-cex-apikeys",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "Minting a key requires the owner token, not a key",
+      "priority": "Medium",
+      "steps": [
+        "Given a fresh account \"alice\"",
+        "And \"alice\" holds a \"trade\" API key",
+        "When the key tries to mint a \"withdraw\" API key",
+        "Then the response status is 401"
+      ]
+    },
+    "88": {
+      "module": "07-cex-apikeys",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "A key is listed under its account",
+      "priority": "Medium",
+      "steps": [
+        "Given a fresh account \"alice\"",
+        "And \"alice\" holds a \"read\" API key",
+        "When the keys of \"alice\" are read",
+        "Then a listed key has scope \"read\""
+      ]
+    },
+    "89": {
+      "module": "08-cex-earn",
+      "layer": "BE/DB",
+      "tier": "minicex-db",
+      "title": "A stake principal must be positive",
+      "priority": "High",
+      "steps": [
+        "Given a throwaway database with the schema applied",
+        "Then inserting a stake with a non-positive principal fails a CHECK"
+      ]
+    },
+    "90": {
+      "module": "08-cex-earn",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "Staking locks the principal out of the balance",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\" funded with 1.0 BTC",
+        "When \"alice\" stakes 0.6 BTC at 500 bps",
+        "Then the response status is 201",
+        "And the API balance for \"alice\" in BTC is 0.4 BTC"
+      ]
+    },
+    "91": {
+      "module": "08-cex-earn",
+      "layer": "BE/DB",
+      "tier": "minicex-db",
+      "title": "The locked principal leaves a matching ledger line",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\" funded with 2.0 ETH",
+        "When \"alice\" stakes 2.0 ETH at 800 bps",
+        "Then a ledger line debits \"alice\" 2.0 ETH with reason \"stake_lock\"",
+        "And the ledger sum for \"alice\" in ETH equals the balance row"
+      ]
+    },
+    "92": {
+      "module": "08-cex-earn",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "Accrual over a year equals the APR on the principal",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\" funded with 100.0 USDC",
+        "And \"alice\" stakes 100.0 USDC at 1000 bps",
+        "When the stake accrues 31536000 seconds",
+        "Then the stake accrued is 10.0 USDC"
+      ]
+    },
+    "93": {
+      "module": "08-cex-earn",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "Accrual is proportional to the elapsed time",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\" funded with 100.0 USDC",
+        "And \"alice\" stakes 100.0 USDC at 1000 bps",
+        "When the stake accrues 15768000 seconds",
+        "Then the stake accrued is 5.0 USDC"
+      ]
+    },
+    "94": {
+      "module": "08-cex-earn",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "Redeeming returns the principal plus the reward",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\" funded with 100.0 USDC",
+        "And \"alice\" stakes 100.0 USDC at 1000 bps",
+        "And the stake accrues 31536000 seconds",
+        "When the stake is redeemed",
+        "Then the API balance for \"alice\" in USDC is 110.0 USDC"
+      ]
+    },
+    "95": {
+      "module": "08-cex-earn",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "A stake cannot be redeemed twice",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\" funded with 100.0 USDC",
+        "And \"alice\" stakes 100.0 USDC at 1000 bps",
+        "And the stake accrues 31536000 seconds",
+        "And the stake is redeemed",
+        "When the stake is redeemed again",
+        "Then the second redemption was an idempotent replay",
+        "And the API balance for \"alice\" in USDC is 110.0 USDC"
+      ]
+    },
+    "96": {
+      "module": "08-cex-earn",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "Staking more than the balance is refused",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\" funded with 1.0 BTC",
+        "When \"alice\" stakes 5.0 BTC at 500 bps",
+        "Then the response status is 409",
+        "And the response code is \"insufficient_funds\""
+      ]
+    },
+    "97": {
+      "module": "08-cex-earn",
+      "layer": "BE/DB",
+      "tier": "minicex-db",
+      "title": "A redeemed stake's ledger balances back to whole",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\" funded with 100.0 USDC",
+        "And \"alice\" stakes 100.0 USDC at 1000 bps",
+        "And the stake accrues 31536000 seconds",
+        "And the stake is redeemed",
+        "Then the ledger sum for \"alice\" in USDC equals the balance row"
+      ]
+    },
+    "98": {
+      "module": "08-cex-earn",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "Staked funds are not available to withdraw",
+      "priority": "Medium",
+      "steps": [
+        "Given a fresh account \"alice\" funded with 1.0 BTC",
+        "And \"alice\" stakes 0.8 BTC at 500 bps",
+        "When \"alice\" tries to withdraw 0.5 BTC",
+        "Then the response status is 409",
+        "And the response code is \"insufficient_funds\""
       ]
     }
   }

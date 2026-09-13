@@ -47,6 +47,24 @@ class MiniCex {
   bridgeWithdraw(token, body) { return this.post('/bridge/withdraw', body, { token }); }
   bridgeDeposit(body) { return this.post('/bridge/deposit', body); }
   bridgeConfirm(id) { return this.post('/bridge/' + id + '/confirm', undefined); }
+  // v2: orders / fees
+  placeOrder(token, body) { return this.post('/orders', body, { token }); }
+  cancelOrder(token, id) { return this.request('DELETE', '/orders/' + id, { token }); }
+  orderbook(base, quote) { return this.get('/orderbook/' + base + '/' + quote); }
+  ordersOf(handle, status) { return this.get('/orders/' + handle + (status ? '?status=' + status : '')); }
+  fillsOf(base, quote) { return this.get('/fills?base=' + base + '&quote=' + quote); }
+  fees() { return this.get('/fees'); }
+  feesFor(handle) { return this.get('/fees/' + handle); }
+  // v2: api keys
+  createKey(token, scope, ratePerMin) { return this.post('/apikeys', { scope, rate_per_min: ratePerMin }, { token }); }
+  revokeKey(token, key) { return this.request('DELETE', '/apikeys/' + key, { token }); }
+  keysOf(handle) { return this.get('/apikeys/' + handle); }
+  requestWithKey(method, path, key, body) { const o = { headers: { 'x-api-key': key } }; if (body !== undefined) o.body = body; return this.request(method, path, o); }
+  // v2: staking
+  stake(token, body) { return this.post('/stake', body, { token }); }
+  stakeAccrue(token, id, seconds) { return this.post('/stake/' + id + '/accrue', { seconds }, { token }); }
+  stakeRedeem(token, id) { return this.post('/stake/' + id + '/redeem', undefined, { token }); }
+  stakesOf(handle) { return this.get('/stakes/' + handle); }
 
   /** A funded account with `amount` base units of `asset` deposited. */
   async funded(asset, amount, prefix = 'acct') {

@@ -24,3 +24,11 @@ INSERT OR IGNORE INTO pairs (base, quote, fee_bps, min_base, active) VALUES
   ('SOL',  'ETH',  30, 1000000,  1),
   ('USDC', 'USD',  0,  0,        1),
   ('DOGE', 'USD',  20, 0,        0);   -- inactive pair on purpose
+
+-- Maker-taker fee schedule by 30-day taker volume (USD micro). tier 3 pays the
+-- maker a rebate (negative maker_bps).
+INSERT OR IGNORE INTO fee_tiers (tier, min_volume_micro, maker_bps, taker_bps) VALUES
+  (0, 0,               10, 20),
+  (1, 1000000000000,    8, 16),   -- >= $1,000,000
+  (2, 10000000000000,   5, 12),   -- >= $10,000,000
+  (3, 100000000000000, -2,  8);   -- >= $100,000,000 (maker rebate)

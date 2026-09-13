@@ -38,6 +38,16 @@ def cex_scenario(qa):
     qa.last_bridge = None
     qa.bridge_deposit_req = None
     yield
+    # The order book is shared across scenarios; cancel this scenario's resting
+    # orders so the next one starts from an empty book (mirrors the Node After).
+    for a in (qa.accounts or {}).values():
+        try:
+            r = cex.get("/orders/" + a["handle"])
+            for o in (r["body"] or {}).get("orders", []):
+                if o["status"] in ("open", "partial"):
+                    cex.request("DELETE", "/orders/" + str(o["id"]), token=a["token"])
+        except Exception:  # noqa: BLE001
+            pass
     if qa.tmp is not None:
         qa.tmp.close()
     if qa.store is not None:
@@ -187,7 +197,7 @@ def fresh_account(qa, alias):
     act(qa, lambda: ensure_account(qa, alias))
 
 
-@given(parsers.parse('a fresh account "{alias}" funded with {amt:f} {asset}'))
+@given(parsers.parse('a fresh account "{alias}" funded with {amt:g} {asset}'))
 def fresh_funded(qa, alias, amt, asset):
     def go():
         a = ensure_account(qa, alias)
@@ -200,25 +210,25 @@ def _deposit(qa, alias, amt, asset, key=None):
     qa.api = cex.deposit(a["token"], asset, coin(amt), key)
 
 
-@given(parsers.parse('"{alias}" deposits {amt:f} {asset}'))
-@when(parsers.parse('"{alias}" deposits {amt:f} {asset}'))
+@given(parsers.parse('"{alias}" deposits {amt:g} {asset}'))
+@when(parsers.parse('"{alias}" deposits {amt:g} {asset}'))
 def deposits(qa, alias, amt, asset):
     act(qa, lambda: _deposit(qa, alias, amt, asset))
 
 
-@when(parsers.parse('"{alias}" deposits {amt:f} {asset} with key "{key}"'))
+@when(parsers.parse('"{alias}" deposits {amt:g} {asset} with key "{key}"'))
 def deposits_key(qa, alias, amt, asset, key):
     act(qa, lambda: _deposit(qa, alias, amt, asset, key))
 
 
-@when(parsers.parse('"{alias}" withdraws {amt:f} {asset}'))
+@when(parsers.parse('"{alias}" withdraws {amt:g} {asset}'))
 def withdraws(qa, alias, amt, asset):
     def go():
         qa.api = cex.withdraw(acct(qa, alias)["token"], asset, coin(amt))
     act(qa, go)
 
 
-@when(parsers.parse('"{alias}" transfers {amt:f} {asset} to "{to}"'))
+@when(parsers.parse('"{alias}" transfers {amt:g} {asset} to "{to}"'))
 def transfers(qa, alias, amt, asset, to):
     def go():
         to_acct = ensure_account(qa, to)
@@ -226,7 +236,7 @@ def transfers(qa, alias, amt, asset, to):
     act(qa, go)
 
 
-@when(parsers.parse('"{alias}" tries to transfer {amt:f} {asset} to "{to}"'))
+@when(parsers.parse('"{alias}" tries to transfer {amt:g} {asset} to "{to}"'))
 def tries_transfer(qa, alias, amt, asset, to):
     def go():
         to_acct = ensure_account(qa, to)
@@ -234,22 +244,22 @@ def tries_transfer(qa, alias, amt, asset, to):
     act(qa, go)
 
 
-@when(parsers.parse('"{alias}" swaps {amt:f} {frm} to {to}'))
+@when(parsers.parse('"{alias}" swaps {amt:g} {frm} to {to}'))
 def swaps(qa, alias, amt, frm, to):
     def go():
         qa.api = cex.swap(acct(qa, alias)["token"], {"from_asset": frm, "to_asset": to, "from_amount": coin(amt)})
     act(qa, go)
 
 
-@when(parsers.parse('"{alias}" swaps {amt:f} {frm} to {to} demanding at least {minv:f} {q} out'))
+@when(parsers.parse('"{alias}" swaps {amt:g} {frm} to {to} demanding at least {minv:g} {q} out'))
 def swaps_min(qa, alias, amt, frm, to, minv, q):
     def go():
         qa.api = cex.swap(acct(qa, alias)["token"], {"from_asset": frm, "to_asset": to, "from_amount": coin(amt), "min_to_amount": coin(minv)})
     act(qa, go)
 
 
-@given(parsers.parse('"{alias}" bridge-withdraws {amt:f} {asset} to chain "{chain}"'))
-@when(parsers.parse('"{alias}" bridge-withdraws {amt:f} {asset} to chain "{chain}"'))
+@given(parsers.parse('"{alias}" bridge-withdraws {amt:g} {asset} to chain "{chain}"'))
+@when(parsers.parse('"{alias}" bridge-withdraws {amt:g} {asset} to chain "{chain}"'))
 def bridge_withdraw(qa, alias, amt, asset, chain):
     def go():
         qa.api = cex.bridge_withdraw(acct(qa, alias)["token"], {"asset": asset, "amount": coin(amt), "dst_chain": chain})
@@ -258,7 +268,7 @@ def bridge_withdraw(qa, alias, amt, asset, chain):
     act(qa, go)
 
 
-@when(parsers.parse('a bridge deposit of {amt:f} {asset} for "{alias}" from chain "{chain}" with tx "{tx}" is observed'))
+@when(parsers.parse('a bridge deposit of {amt:g} {asset} for "{alias}" from chain "{chain}" with tx "{tx}" is observed'))
 def bridge_deposit(qa, amt, asset, alias, chain, tx):
     def go():
         a = ensure_account(qa, alias)
@@ -292,12 +302,12 @@ def _ledger_sum(qa, alias, asset):
     return qa.store.ledger_balance(qa.store.account_id(acct(qa, alias)["handle"]), asset)
 
 
-@then(parsers.parse('the balance row for "{alias}" in {asset} is {amt:f} {a2}'))
+@then(parsers.parse('the balance row for "{alias}" in {asset} is {amt:g} {a2}'))
 def balance_row(qa, alias, asset, amt, a2):
     check(qa, f"balance {alias}/{asset}", lambda: ((_bal(qa, alias, asset) == coin(amt)), f"got {_bal(qa, alias, asset)}, want {coin(amt)}"))
 
 
-@then(parsers.parse('a ledger line credits "{alias}" {amt:f} {asset} with reason "{reason}"'))
+@then(parsers.parse('a ledger line credits "{alias}" {amt:g} {asset} with reason "{reason}"'))
 def ledger_credit(qa, alias, amt, asset, reason):
     def ev():
         aid = qa.store.account_id(acct(qa, alias)["handle"])
@@ -306,7 +316,7 @@ def ledger_credit(qa, alias, amt, asset, reason):
     check(qa, f"ledger credit {reason}", ev)
 
 
-@then(parsers.parse('a ledger line debits "{alias}" {amt:f} {asset} with reason "{reason}"'))
+@then(parsers.parse('a ledger line debits "{alias}" {amt:g} {asset} with reason "{reason}"'))
 def ledger_debit(qa, alias, amt, asset, reason):
     def ev():
         aid = qa.store.account_id(acct(qa, alias)["handle"])

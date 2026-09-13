@@ -39,10 +39,21 @@ Nothing here needs an account, a key, or a paid service. Clone it and it runs.
 - **bridge** — a cross-chain deposit or withdrawal as a state machine
   (`requested → locked → confirmed → credited`); idempotent by the external tx,
   capped per transaction, and restricted to a chain allowlist.
+- **spot order book** — limit and market orders matched price-time priority with
+  self-trade prevention, `GTC`/`IOC`/`FOK` and post-only, a resting order holding
+  its funds in reserve, and a **maker-taker fee** by volume tier (top tier pays
+  the maker a rebate). Every match conserves base and quote across the two sides.
+- **scoped API keys** — a programmatic `X-API-Key` carries a `read`/`trade`/
+  `withdraw` scope and a per-minute rate limit; a read key cannot trade, a trade
+  key cannot withdraw, a revoked key is refused, and a busy key is throttled.
+- **staking / earn** — a locked principal accrues a fixed APR over explicit
+  simulated seconds (deterministic, no wall clock) and redeems for principal plus
+  reward, idempotently; staked funds are not available to withdraw.
 
 Amounts are integer base units (1e8 per coin) and prices are USD-micros, so
 every figure is exact — no floats in the money path. The live Kraken tier
 cross-checks the mini-cex's listed assets and prices against a real venue.
+**98 cases** across both stacks.
 
 ## The two ideas worth a minute
 
