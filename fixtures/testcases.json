@@ -1,0 +1,685 @@
+{
+  "meta": {
+    "domain": "crypto-cex",
+    "targets": {
+      "minicex-db": "mini-cex SQLite, written by the service (be/db, both stacks open the same file)",
+      "minicex-api": "mini-cex REST over that SQLite (be/api)",
+      "kraken-api": "Kraken public API, read-only, no key (be/api)",
+      "bot": "the pure risk gate (be/bot, no network)",
+      "minicex-fe": "mini-cex HTML pages (Playwright)"
+    },
+    "idPolicy": "immutable",
+    "nextId": 55,
+    "note": "Generated from features/*.feature by testcases/build.js. Every scenario carries @case:N; an N missing here is an error."
+  },
+  "cases": {
+    "1": {
+      "module": "01-cex-db",
+      "layer": "BE/DB",
+      "tier": "minicex-db",
+      "title": "The store has the documented tables",
+      "priority": "High",
+      "steps": [
+        "Then the store has tables assets, pairs, accounts, balances, ledger, transfers, swaps, bridge_ops"
+      ]
+    },
+    "2": {
+      "module": "01-cex-db",
+      "layer": "BE/DB",
+      "tier": "minicex-db",
+      "title": "A balance can never be negative",
+      "priority": "High",
+      "steps": [
+        "Given a throwaway database with the schema applied",
+        "Then inserting a balance with a negative amount fails a CHECK"
+      ]
+    },
+    "3": {
+      "module": "01-cex-db",
+      "layer": "BE/DB",
+      "tier": "minicex-db",
+      "title": "A ledger movement is a real, non-zero change with a known reason",
+      "priority": "High",
+      "steps": [
+        "Given a throwaway database with the schema applied",
+        "Then inserting a ledger row with zero delta fails a CHECK",
+        "And inserting a ledger row with reason \"bogus\" fails a CHECK"
+      ]
+    },
+    "4": {
+      "module": "01-cex-db",
+      "layer": "BE/DB",
+      "tier": "minicex-db",
+      "title": "A balance references a real account and asset",
+      "priority": "High",
+      "steps": [
+        "Given a throwaway database with the schema applied",
+        "Then inserting a balance for a missing account fails a FOREIGN KEY"
+      ]
+    },
+    "5": {
+      "module": "01-cex-db",
+      "layer": "BE/DB",
+      "tier": "minicex-db",
+      "title": "A bridge op is unique per direction and external tx",
+      "priority": "High",
+      "steps": [
+        "Given a throwaway database with the schema applied",
+        "Then inserting two deposit bridge ops with the same external tx fails on the second"
+      ]
+    },
+    "6": {
+      "module": "01-cex-db",
+      "layer": "BE/DB",
+      "tier": "minicex-db",
+      "title": "A pair's two legs must differ",
+      "priority": "Medium",
+      "steps": [
+        "Given a throwaway database with the schema applied",
+        "Then inserting a pair whose base equals its quote fails a CHECK"
+      ]
+    },
+    "7": {
+      "module": "01-cex-db",
+      "layer": "BE/DB",
+      "tier": "minicex-db",
+      "title": "Seeding twice leaves the same rows",
+      "priority": "Medium",
+      "steps": [
+        "Given a throwaway database with the schema and seed applied",
+        "Then applying the seed again changes no row counts"
+      ]
+    },
+    "8": {
+      "module": "01-cex-db",
+      "layer": "BE/DB",
+      "tier": "minicex-db",
+      "title": "A deposit credits the balance and writes a matching ledger line",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\"",
+        "When \"alice\" deposits 1.0 BTC",
+        "Then the balance row for \"alice\" in BTC is 1.0 BTC",
+        "And a ledger line credits \"alice\" 1.0 BTC with reason \"deposit\""
+      ]
+    },
+    "9": {
+      "module": "01-cex-db",
+      "layer": "BE/DB",
+      "tier": "minicex-db",
+      "title": "The ledger sum equals the running balance",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\"",
+        "When \"alice\" deposits 2.0 ETH",
+        "And \"alice\" withdraws 0.5 ETH",
+        "Then the ledger sum for \"alice\" in ETH equals the balance row"
+      ]
+    },
+    "10": {
+      "module": "01-cex-db",
+      "layer": "BE/DB",
+      "tier": "minicex-db",
+      "title": "An internal transfer conserves the total balance",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\"",
+        "And a fresh account \"bob\"",
+        "And \"alice\" deposits 1.0 BTC",
+        "When \"alice\" transfers 0.4 BTC to \"bob\"",
+        "Then the balance row for \"alice\" in BTC is 0.6 BTC",
+        "And the balance row for \"bob\" in BTC is 0.4 BTC",
+        "And the total BTC across \"alice\" and \"bob\" is unchanged"
+      ]
+    },
+    "11": {
+      "module": "01-cex-db",
+      "layer": "BE/DB",
+      "tier": "minicex-db",
+      "title": "A swap debits the input and credits the net output, both on the ledger",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\"",
+        "And \"alice\" deposits 1.0 BTC",
+        "When \"alice\" swaps 0.5 BTC to USD",
+        "Then the ledger sum for \"alice\" in BTC equals the balance row",
+        "And the ledger sum for \"alice\" in USD equals the balance row",
+        "And \"alice\" has a swap row from BTC to USD"
+      ]
+    },
+    "12": {
+      "module": "01-cex-db",
+      "layer": "BE/DB",
+      "tier": "minicex-db",
+      "title": "A bridge withdrawal locks the balance with a debit line",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\"",
+        "And \"alice\" deposits 1.0 BTC",
+        "When \"alice\" bridge-withdraws 0.3 BTC to chain \"ethereum\"",
+        "Then the balance row for \"alice\" in BTC is 0.7 BTC",
+        "And a ledger line debits \"alice\" 0.3 BTC with reason \"bridge_debit\"",
+        "And the bridge op for \"alice\" is in status \"locked\""
+      ]
+    },
+    "13": {
+      "module": "01-cex-db",
+      "layer": "BE/DB",
+      "tier": "minicex-db",
+      "title": "A bridge deposit credits once even when observed twice",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\"",
+        "When a bridge deposit of 1.0 ETH for \"alice\" from chain \"ethereum\" with tx \"dep-x\" is observed",
+        "And the same bridge deposit is observed again",
+        "Then the balance row for \"alice\" in ETH is 1.0 ETH",
+        "And \"alice\" has exactly one bridge op with external tx \"dep-x\""
+      ]
+    },
+    "14": {
+      "module": "01-cex-db",
+      "layer": "BE/DB",
+      "tier": "minicex-db",
+      "title": "An overdrawn transfer leaves both balances untouched",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\"",
+        "And a fresh account \"bob\"",
+        "And \"alice\" deposits 0.2 BTC",
+        "When \"alice\" tries to transfer 5.0 BTC to \"bob\"",
+        "Then the transfer is refused with code \"insufficient_funds\"",
+        "And the balance row for \"alice\" in BTC is 0.2 BTC",
+        "And \"bob\" has no BTC balance row"
+      ]
+    },
+    "15": {
+      "module": "02-cex-api",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "The exchange lists its assets",
+      "priority": "High",
+      "steps": [
+        "When the assets are read",
+        "Then the asset list includes BTC, ETH, SOL, USD",
+        "And every listed asset has a name and a USD price"
+      ]
+    },
+    "16": {
+      "module": "02-cex-api",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "The exchange lists its tradable pairs",
+      "priority": "High",
+      "steps": [
+        "When the pairs are read",
+        "Then the pair list includes BTC/USD and ETH/USD",
+        "And no pair has the same asset on both legs"
+      ]
+    },
+    "17": {
+      "module": "02-cex-api",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "A quote returns the net after fee",
+      "priority": "High",
+      "steps": [
+        "When a quote of 1.0 BTC to USD is requested",
+        "Then the quote net equals the gross minus the fee",
+        "And the quote fee matches the pair fee in basis points"
+      ]
+    },
+    "18": {
+      "module": "02-cex-api",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "Creating an account returns a handle and a token",
+      "priority": "High",
+      "steps": [
+        "When a fresh account \"alice\" is created",
+        "Then the response status is 201",
+        "And the response has a token"
+      ]
+    },
+    "19": {
+      "module": "02-cex-api",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "A duplicate handle is refused",
+      "priority": "Medium",
+      "steps": [
+        "Given a fresh account \"alice\"",
+        "When an account is created with the same handle as \"alice\"",
+        "Then the response status is 409",
+        "And the response code is \"handle_taken\""
+      ]
+    },
+    "20": {
+      "module": "02-cex-api",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "A deposit is accepted and shows in balances",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\"",
+        "When \"alice\" deposits 1.0 BTC",
+        "Then the response status is 201",
+        "And the API balance for \"alice\" in BTC is 1.0 BTC"
+      ]
+    },
+    "21": {
+      "module": "02-cex-api",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "A swap moves balances by the quoted amounts",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\"",
+        "And \"alice\" deposits 1.0 BTC",
+        "When \"alice\" swaps 0.5 BTC to USD",
+        "Then the response status is 201",
+        "And the swap response output equals the quote for 0.5 BTC to USD"
+      ]
+    },
+    "22": {
+      "module": "02-cex-api",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "A swap below the slippage floor is refused",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\"",
+        "And \"alice\" deposits 1.0 BTC",
+        "When \"alice\" swaps 0.5 BTC to USD demanding at least 1000000.0 USD out",
+        "Then the response status is 409",
+        "And the response code is \"slippage\""
+      ]
+    },
+    "23": {
+      "module": "02-cex-api",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "A swap of a delisted asset is refused",
+      "priority": "Medium",
+      "steps": [
+        "Given a fresh account \"alice\"",
+        "And \"alice\" deposits 100.0 DOGE",
+        "When \"alice\" swaps 10.0 DOGE to USD",
+        "Then the response status is 409",
+        "And the response code is \"asset_inactive\""
+      ]
+    },
+    "24": {
+      "module": "02-cex-api",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "A transfer moves funds between accounts",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\"",
+        "And a fresh account \"bob\"",
+        "And \"alice\" deposits 1.0 ETH",
+        "When \"alice\" transfers 0.4 ETH to \"bob\"",
+        "Then the response status is 201",
+        "And the API balance for \"bob\" in ETH is 0.4 ETH"
+      ]
+    },
+    "25": {
+      "module": "02-cex-api",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "A transfer over balance is refused",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\"",
+        "And a fresh account \"bob\"",
+        "And \"alice\" deposits 0.1 ETH",
+        "When \"alice\" tries to transfer 9.0 ETH to \"bob\"",
+        "Then the response status is 409",
+        "And the response code is \"insufficient_funds\""
+      ]
+    },
+    "26": {
+      "module": "02-cex-api",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "A repeated deposit with the same idempotency key makes one credit",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\"",
+        "When \"alice\" deposits 1.0 BTC with key \"dep-1\"",
+        "And \"alice\" deposits 1.0 BTC with key \"dep-1\"",
+        "Then the API balance for \"alice\" in BTC is 1.0 BTC",
+        "And the second deposit was an idempotent replay"
+      ]
+    },
+    "27": {
+      "module": "02-cex-api",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "An unauthenticated write is refused",
+      "priority": "High",
+      "steps": [
+        "When a deposit is attempted with no token",
+        "Then the response status is 401"
+      ]
+    },
+    "28": {
+      "module": "02-cex-api",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "A bridge withdrawal locks and can be confirmed",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\"",
+        "And \"alice\" deposits 1.0 BTC",
+        "When \"alice\" bridge-withdraws 0.3 BTC to chain \"ethereum\"",
+        "Then the response status is 201",
+        "And the bridge op is in status \"locked\"",
+        "When the bridge op is confirmed",
+        "Then the bridge op is in status \"credited\""
+      ]
+    },
+    "29": {
+      "module": "02-cex-api",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "A bridge withdrawal over the cap is refused",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\"",
+        "And \"alice\" deposits 10.0 BTC",
+        "When \"alice\" bridge-withdraws 5.0 BTC to chain \"ethereum\"",
+        "Then the response status is 409",
+        "And the response code is \"over_cap\""
+      ]
+    },
+    "30": {
+      "module": "02-cex-api",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "A bridge to an unknown chain is refused",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\"",
+        "And \"alice\" deposits 1.0 BTC",
+        "When \"alice\" bridge-withdraws 0.1 BTC to chain \"mars\"",
+        "Then the response status is 400",
+        "And the response code is \"unknown_chain\""
+      ]
+    },
+    "31": {
+      "module": "02-cex-api",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "A bridge deposit is idempotent by external tx",
+      "priority": "Medium",
+      "steps": [
+        "Given a fresh account \"alice\"",
+        "When a bridge deposit of 2.0 ETH for \"alice\" from chain \"ethereum\" with tx \"dep-y\" is observed",
+        "And the same bridge deposit is observed again",
+        "Then the API balance for \"alice\" in ETH is 2.0 ETH",
+        "And the second bridge deposit was an idempotent replay"
+      ]
+    },
+    "32": {
+      "module": "02-cex-api",
+      "layer": "BE/API",
+      "tier": "minicex-api",
+      "title": "A swap of an unknown asset is not found",
+      "priority": "Medium",
+      "steps": [
+        "Given a fresh account \"alice\"",
+        "And \"alice\" deposits 1.0 BTC",
+        "When \"alice\" swaps 0.1 BTC to ZZZ",
+        "Then the response status is 404"
+      ]
+    },
+    "33": {
+      "module": "03-kraken-api",
+      "layer": "BE/API",
+      "tier": "kraken-api",
+      "title": "Kraken lists its assets",
+      "priority": "Medium",
+      "steps": [
+        "When the Kraken asset list is read",
+        "Then the Kraken asset list is non-empty"
+      ]
+    },
+    "34": {
+      "module": "03-kraken-api",
+      "layer": "BE/API",
+      "tier": "kraken-api",
+      "title": "Kraken lists its asset pairs",
+      "priority": "Medium",
+      "steps": [
+        "When the Kraken pair list is read",
+        "Then every Kraken pair name is a non-empty string"
+      ]
+    },
+    "35": {
+      "module": "03-kraken-api",
+      "layer": "BE/API",
+      "tier": "kraken-api",
+      "title": "The mini-cex crypto assets trade on Kraken",
+      "priority": "High",
+      "steps": [
+        "When the Kraken pair list is read",
+        "Then a USD pair exists on Kraken for each of BTC, ETH, SOL"
+      ]
+    },
+    "36": {
+      "module": "03-kraken-api",
+      "layer": "BE/API",
+      "tier": "kraken-api",
+      "title": "Kraken quotes a positive BTC price",
+      "priority": "High",
+      "steps": [
+        "When the Kraken last price for \"XBT/USD\" is read",
+        "Then the Kraken price is a positive number"
+      ]
+    },
+    "37": {
+      "module": "03-kraken-api",
+      "layer": "BE/API",
+      "tier": "kraken-api",
+      "title": "The mini-cex BTC price is the same order of magnitude as Kraken's",
+      "priority": "High",
+      "steps": [
+        "When the Kraken last price for \"XBT/USD\" is read",
+        "Then the mini-cex BTC price is the same order of magnitude as Kraken's"
+      ]
+    },
+    "38": {
+      "module": "03-kraken-api",
+      "layer": "BE/API",
+      "tier": "kraken-api",
+      "title": "Kraken quotes a positive ETH price",
+      "priority": "Medium",
+      "steps": [
+        "When the Kraken last price for \"ETH/USD\" is read",
+        "Then the Kraken price is a positive number"
+      ]
+    },
+    "39": {
+      "module": "04-bot",
+      "layer": "BE/BOT",
+      "tier": "bot",
+      "title": "The kill switch blocks every operation",
+      "priority": "High",
+      "steps": [
+        "Given the kill switch is on",
+        "When the engine plans a transfer of 0.1 BTC",
+        "Then the plan is refused for \"the kill switch is on\""
+      ]
+    },
+    "40": {
+      "module": "04-bot",
+      "layer": "BE/BOT",
+      "tier": "bot",
+      "title": "A zero amount is refused",
+      "priority": "High",
+      "steps": [
+        "When the engine plans a transfer of 0.0 BTC",
+        "Then the plan is refused for \"amount must be positive\""
+      ]
+    },
+    "41": {
+      "module": "04-bot",
+      "layer": "BE/BOT",
+      "tier": "bot",
+      "title": "A transfer within balance is allowed",
+      "priority": "High",
+      "steps": [
+        "When the engine plans a transfer of 0.5 BTC",
+        "Then the plan is allowed"
+      ]
+    },
+    "42": {
+      "module": "04-bot",
+      "layer": "BE/BOT",
+      "tier": "bot",
+      "title": "A transfer over balance is refused",
+      "priority": "High",
+      "steps": [
+        "When the engine plans a transfer of 5.0 BTC",
+        "Then the plan is refused for \"balance is below the amount\""
+      ]
+    },
+    "43": {
+      "module": "04-bot",
+      "layer": "BE/BOT",
+      "tier": "bot",
+      "title": "A swap below the pair minimum is refused",
+      "priority": "High",
+      "steps": [
+        "When the engine plans a swap of 0.00001 BTC to USD",
+        "Then the plan is refused for \"below the pair minimum\""
+      ]
+    },
+    "44": {
+      "module": "04-bot",
+      "layer": "BE/BOT",
+      "tier": "bot",
+      "title": "A swap under the slippage floor is refused",
+      "priority": "High",
+      "steps": [
+        "When the engine plans a swap of 0.5 BTC to USD demanding at least 1000000.0 USD",
+        "Then the plan is refused for \"quote is below the slippage floor\""
+      ]
+    },
+    "45": {
+      "module": "04-bot",
+      "layer": "BE/BOT",
+      "tier": "bot",
+      "title": "A swap with no listed pair is refused",
+      "priority": "High",
+      "steps": [
+        "When the engine plans a swap of 1.0 USD to SOL",
+        "Then the plan is allowed",
+        "When the engine plans a swap of 100.0 DOGE to USD",
+        "Then the plan is refused for \"no active pair for those assets\""
+      ]
+    },
+    "46": {
+      "module": "04-bot",
+      "layer": "BE/BOT",
+      "tier": "bot",
+      "title": "A bridge to an unknown chain is refused",
+      "priority": "High",
+      "steps": [
+        "When the engine plans a bridge of 0.1 BTC to chain \"mars\"",
+        "Then the plan is refused for \"destination chain is not supported\""
+      ]
+    },
+    "47": {
+      "module": "04-bot",
+      "layer": "BE/BOT",
+      "tier": "bot",
+      "title": "A bridge over the cap is refused",
+      "priority": "High",
+      "steps": [
+        "When the engine plans a bridge of 5.0 BTC to chain \"ethereum\"",
+        "Then the plan is refused for \"amount exceeds the bridge per-transaction cap\""
+      ]
+    },
+    "48": {
+      "module": "04-bot",
+      "layer": "BE/BOT",
+      "tier": "bot",
+      "title": "A bridge within cap and balance is allowed",
+      "priority": "High",
+      "steps": [
+        "When the engine plans a bridge of 0.5 BTC to chain \"ethereum\"",
+        "Then the plan is allowed"
+      ]
+    },
+    "49": {
+      "module": "05-cex-fe",
+      "layer": "FE/UI",
+      "tier": "minicex-fe",
+      "title": "The home page lists the exchange's assets",
+      "priority": "High",
+      "steps": [
+        "Then the assets on screen include BTC, ETH, SOL, USD",
+        "And every asset row on screen shows a symbol and a USD price"
+      ]
+    },
+    "50": {
+      "module": "05-cex-fe",
+      "layer": "FE/UI",
+      "tier": "minicex-fe",
+      "title": "A delisted asset is marked so on screen",
+      "priority": "Medium",
+      "steps": [
+        "Then the DOGE row on screen is marked delisted"
+      ]
+    },
+    "51": {
+      "module": "05-cex-fe",
+      "layer": "FE/UI",
+      "tier": "minicex-fe",
+      "title": "The number of assets on screen equals the API asset count",
+      "priority": "High",
+      "steps": [
+        "Then the number of assets on screen equals the API asset count"
+      ]
+    },
+    "52": {
+      "module": "05-cex-fe",
+      "layer": "FE/UI",
+      "tier": "minicex-fe",
+      "title": "A funded wallet shows its balance on screen",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\" funded with 1.0 BTC",
+        "When the wallet page for \"alice\" is opened",
+        "Then the BTC balance on screen is 1.0"
+      ]
+    },
+    "53": {
+      "module": "05-cex-fe",
+      "layer": "FE/UI",
+      "tier": "minicex-fe",
+      "title": "The wallet balances on screen match the API balances",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\" funded with 2.0 ETH",
+        "When the wallet page for \"alice\" is opened",
+        "Then every balance on screen matches the API balance for \"alice\""
+      ]
+    },
+    "54": {
+      "module": "05-cex-fe",
+      "layer": "FE/UI",
+      "tier": "minicex-fe",
+      "title": "A bridge op page shows its status",
+      "priority": "Medium",
+      "steps": [
+        "Given a fresh account \"alice\" funded with 1.0 BTC",
+        "And \"alice\" bridge-withdraws 0.2 BTC to chain \"ethereum\"",
+        "When the op page for that bridge op is opened",
+        "Then the op status on screen is \"locked\""
+      ]
+    }
+  }
+}

@@ -1,0 +1,105 @@
+name: ci
+
+# One shared core, two stacks, one Gherkin set. The jobs mirror how the suite
+# runs locally: the core self-tests first, then each tier against the service
+# it targets. A tier that reads a live third party (Kraken) grades Blocked when
+# the source is unreachable and never fails the build on it; the gate verifies
+# the SHAPE of the run instead.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # ---- source hygiene -------------------------------------------------------
+  packaging:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '24' }
+      - name: No tracked-looking source is gitignored
+        run: |
+          bad=$(git ls-files --others --ignored --exclude-standard | grep -E '\.(js|py|sol|sql)$' | grep -vE 'node_modules/|/data/|/out/|/cache/|\.venv/' || true)
+          if [ -n "$bad" ]; then echo "ignored source files:"; echo "$bad"; exit 1; fi
+          echo "ok"
+      - name: The catalogue is not stale
+        run: node testcases/build.js --check
+
+  cleanroom:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Clean-room keyword scan
+        run: bash scripts/cleanroom-scan.sh
+
+  # ---- shared core ----------------------------------------------------------
+  core-selftest-node:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '24' }
+      - run: node --test "selftest/*.test.js"
+        working-directory: core/node
+
+  core-selftest-python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install -e core/python pytest
+      - run: python -m pytest core/python/selftest -q
+
+  # ---- the mini-cex + the live exchange -------------------------------------
+  cex-be-no-browser:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        stack: [node, python]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '24' }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: mini-cex seeded, then the DB, API, Kraken and bot tiers (no browser)
+        env:
+          MINI_CEX_DB: /tmp/mini-cex/mini-cex.db
+        run: bash scripts/run-be.sh ${{ matrix.stack }}
+
+  cex-fe:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        stack: [node, python]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '24' }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: mini-cex screens (Playwright chromium)
+        env:
+          MINI_CEX_DB: /tmp/mini-cex/mini-cex.db
+        run: bash scripts/run-fe.sh ${{ matrix.stack }}
+
+  # ---- the shape gate: the whole suite, one stack, verified against baseline
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '24' }
+      - name: Whole suite, then verify the run's shape
+        env:
+          MINI_CEX_DB: /tmp/mini-cex/mini-cex.db
+        run: bash scripts/gate.sh node

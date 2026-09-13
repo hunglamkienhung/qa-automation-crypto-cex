@@ -1,0 +1,22 @@
+[project]
+name = "crypto-cex-qa"
+version = "1.0.0"
+description = "Centralized-exchange domain: a self-written mini-cex and the live Kraken public API, tested at the DB, API and screen in two stacks over one Gherkin set"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+bdd_features_base_dir = "../features"
+addopts = "-q -p no:cacheprovider"
+filterwarnings = ["ignore:Unknown pytest.mark.case:pytest.PytestUnknownMarkWarning"]
+markers = [
+  "case_id(id): the immutable catalogue ID this scenario reports against",
+  "be: backend branch -- no browser",
+  "fe: frontend branch -- Playwright",
+  "db: reads the mini-cex SQLite file directly",
+  "api: calls an HTTP API",
+  "minicex: target is the self-written mini-cex",
+  "kraken: target is the live Kraken public API",
+  "bot: the pure risk gate",
+]
+testpaths = ["be", "fe"]

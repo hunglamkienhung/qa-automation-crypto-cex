@@ -1,0 +1,28 @@
+{
+  "name": "crypto-cex-qa",
+  "version": "1.0.0",
+  "description": "Centralized-exchange domain: a self-written mini-cex (SQLite + REST + HTML) tested at the DB, API and screen, plus the live Kraken public API read-only.",
+  "license": "MIT",
+  "private": true,
+  "engines": { "node": ">=22.13" },
+  "scripts": {
+    "selftest": "node --test \"be/**/*.test.js\"",
+    "be": "cucumber-js --tags @be",
+    "be:db": "cucumber-js --tags \"@be and @db\"",
+    "be:api": "cucumber-js --tags \"@be and @api\"",
+    "fe": "cucumber-js --tags @fe",
+    "fe:specs": "playwright test",
+    "bdd": "cucumber-js",
+    "report": "qa-report",
+    "verify": "qa-verify",
+    "bugflow": "qa-bugflow",
+    "clean": "node -e \"for (const d of ['reports','queue','state','test-results']) require('fs').rmSync(d,{recursive:true,force:true})\""
+  },
+  "dependencies": {
+    "@portfolio/core": "file:../core/node"
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "^11.0.0",
+    "@playwright/test": "^1.49.0"
+  }
+}

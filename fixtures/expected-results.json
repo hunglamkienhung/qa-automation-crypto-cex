@@ -1,0 +1,205 @@
+{
+  "why": [
+    "A declared status may be a single value or a LIST of acceptable ones.",
+    "Service and live cases declare [\"Passed\",\"Blocked\"]: the invariant held, or a source was unreachable and nothing was measured. What no list contains is Failed.",
+    "mini-cex cases (DB, API, FE) are deterministic against the local service and its SQLite; they grade Blocked only when the service is not running or the browser is unavailable.",
+    "Kraken cases grade Blocked when the public API is unreachable, rate-limited, or serves a challenge page -- an outage is never a broken exchange.",
+    "The pure risk-gate cases (bot) touch no source, so they are declared Passed outright.",
+    "No case is declared Failed: nothing here is currently failing, and manufacturing a failure to have one would be dishonest."
+  ],
+  "summary": {
+    "total": 54,
+    "Passed": 54,
+    "Failed": 0,
+    "Blocked": 0,
+    "note": "nominal: mini-cex running and seeded, Kraken reachable, a browser available for the FE tier"
+  },
+  "cases": {
+    "1": [
+      "Passed",
+      "Blocked"
+    ],
+    "2": [
+      "Passed",
+      "Blocked"
+    ],
+    "3": [
+      "Passed",
+      "Blocked"
+    ],
+    "4": [
+      "Passed",
+      "Blocked"
+    ],
+    "5": [
+      "Passed",
+      "Blocked"
+    ],
+    "6": [
+      "Passed",
+      "Blocked"
+    ],
+    "7": [
+      "Passed",
+      "Blocked"
+    ],
+    "8": [
+      "Passed",
+      "Blocked"
+    ],
+    "9": [
+      "Passed",
+      "Blocked"
+    ],
+    "10": [
+      "Passed",
+      "Blocked"
+    ],
+    "11": [
+      "Passed",
+      "Blocked"
+    ],
+    "12": [
+      "Passed",
+      "Blocked"
+    ],
+    "13": [
+      "Passed",
+      "Blocked"
+    ],
+    "14": [
+      "Passed",
+      "Blocked"
+    ],
+    "15": [
+      "Passed",
+      "Blocked"
+    ],
+    "16": [
+      "Passed",
+      "Blocked"
+    ],
+    "17": [
+      "Passed",
+      "Blocked"
+    ],
+    "18": [
+      "Passed",
+      "Blocked"
+    ],
+    "19": [
+      "Passed",
+      "Blocked"
+    ],
+    "20": [
+      "Passed",
+      "Blocked"
+    ],
+    "21": [
+      "Passed",
+      "Blocked"
+    ],
+    "22": [
+      "Passed",
+      "Blocked"
+    ],
+    "23": [
+      "Passed",
+      "Blocked"
+    ],
+    "24": [
+      "Passed",
+      "Blocked"
+    ],
+    "25": [
+      "Passed",
+      "Blocked"
+    ],
+    "26": [
+      "Passed",
+      "Blocked"
+    ],
+    "27": [
+      "Passed",
+      "Blocked"
+    ],
+    "28": [
+      "Passed",
+      "Blocked"
+    ],
+    "29": [
+      "Passed",
+      "Blocked"
+    ],
+    "30": [
+      "Passed",
+      "Blocked"
+    ],
+    "31": [
+      "Passed",
+      "Blocked"
+    ],
+    "32": [
+      "Passed",
+      "Blocked"
+    ],
+    "33": [
+      "Passed",
+      "Blocked"
+    ],
+    "34": [
+      "Passed",
+      "Blocked"
+    ],
+    "35": [
+      "Passed",
+      "Blocked"
+    ],
+    "36": [
+      "Passed",
+      "Blocked"
+    ],
+    "37": [
+      "Passed",
+      "Blocked"
+    ],
+    "38": [
+      "Passed",
+      "Blocked"
+    ],
+    "39": "Passed",
+    "40": "Passed",
+    "41": "Passed",
+    "42": "Passed",
+    "43": "Passed",
+    "44": "Passed",
+    "45": "Passed",
+    "46": "Passed",
+    "47": "Passed",
+    "48": "Passed",
+    "49": [
+      "Passed",
+      "Blocked"
+    ],
+    "50": [
+      "Passed",
+      "Blocked"
+    ],
+    "51": [
+      "Passed",
+      "Blocked"
+    ],
+    "52": [
+      "Passed",
+      "Blocked"
+    ],
+    "53": [
+      "Passed",
+      "Blocked"
+    ],
+    "54": [
+      "Passed",
+      "Blocked"
+    ]
+  }
+}
