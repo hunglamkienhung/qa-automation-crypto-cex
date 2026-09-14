@@ -1,6 +1,6 @@
 # Crypto CEX — test cases
 
-112 cases across a self-written mini-cex (with a real SQLite database) and the live Kraken public API. Generated from `../features/*.feature` by `build.js`; do not edit by hand.
+116 cases across a self-written mini-cex (with a real SQLite database) and the live Kraken public API. Generated from `../features/*.feature` by `build.js`; do not edit by hand.
 
 ## minicex-db (28)
 
@@ -138,3 +138,12 @@
 | 56 | FE/UI | High | The swap form converts one asset to another |
 | 57 | FE/UI | High | The bridge form locks a withdrawal |
 | 58 | FE/UI | High | The transfer form refuses an overdraw |
+
+## minicex-security (4)
+
+| ID | Layer | Priority | Title |
+|---|---|---|---|
+| 113 | BE/API | High | A garbage bearer token is refused on a write |
+| 114 | BE/API | High | One account cannot revoke another account's API key |
+| 115 | BE/API | High | The key list exposes only a prefix, never the full key |
+| 116 | BE/API | Medium | A public market-data response carries no credential |

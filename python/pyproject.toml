@@ -18,5 +18,6 @@ markers = [
   "minicex: target is the self-written mini-cex",
   "kraken: target is the live Kraken public API",
   "bot: the pure risk gate",
+  "security: adversarial probes of the auth surface (garbage token, cross-account, secret hygiene)",
 ]
 testpaths = ["be", "fe"]

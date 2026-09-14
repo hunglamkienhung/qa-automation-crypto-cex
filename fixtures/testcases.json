@@ -9,7 +9,7 @@
       "minicex-fe": "mini-cex HTML pages (Playwright)"
     },
     "idPolicy": "immutable",
-    "nextId": 113,
+    "nextId": 117,
     "note": "Generated from features/*.feature by testcases/build.js. Every scenario carries @case:N; an N missing here is an error."
   },
   "cases": {
@@ -1458,6 +1458,58 @@
         "And the market maker reprices to 61000",
         "Then the ledger sum for the maker in BTC equals its balance row",
         "And the ledger sum for the maker in USD equals its balance row"
+      ]
+    },
+    "113": {
+      "module": "11-cex-security",
+      "layer": "BE/API",
+      "tier": "minicex-security",
+      "title": "A garbage bearer token is refused on a write",
+      "priority": "High",
+      "steps": [
+        "When a write is attempted with a garbage bearer token",
+        "Then the response status is 401",
+        "And the response code is \"unauthenticated\""
+      ]
+    },
+    "114": {
+      "module": "11-cex-security",
+      "layer": "BE/API",
+      "tier": "minicex-security",
+      "title": "One account cannot revoke another account's API key",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\"",
+        "And \"alice\" holds a \"trade\" API key",
+        "When another account tries to revoke that key",
+        "Then the response status is 403",
+        "And the response code is \"forbidden\""
+      ]
+    },
+    "115": {
+      "module": "11-cex-security",
+      "layer": "BE/API",
+      "tier": "minicex-security",
+      "title": "The key list exposes only a prefix, never the full key",
+      "priority": "High",
+      "steps": [
+        "Given a fresh account \"alice\"",
+        "And \"alice\" holds a \"trade\" API key",
+        "When \"alice\"'s API keys are listed",
+        "Then the key list shows a prefix but not the full key"
+      ]
+    },
+    "116": {
+      "module": "11-cex-security",
+      "layer": "BE/API",
+      "tier": "minicex-security",
+      "title": "A public market-data response carries no credential",
+      "priority": "Medium",
+      "steps": [
+        "Given a fresh account \"alice\"",
+        "And \"alice\" holds a \"trade\" API key",
+        "When the listed assets are read",
+        "Then the response carries no account token or API key"
       ]
     }
   }
