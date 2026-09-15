@@ -59,7 +59,7 @@ cross-checks the mini-cex's listed assets and prices against a real venue.
   (never a valid rejection), and never leaks its token. Verified at both the API
   tier and, from the SQLite rows, the DB tier.
 
-**116 cases** across both stacks, including a `be-cex-security.feature` tier that
+**1000 cases** across both stacks, including a `be-cex-security.feature` tier that
 probes the auth surface adversarially — a garbage bearer token (401), one account
 reaching for another's API key (403), and secret hygiene: a minted key is shown
 once and only a prefix is ever listed again, and no credential leaks in a public
